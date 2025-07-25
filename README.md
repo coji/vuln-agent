@@ -1,11 +1,12 @@
 # vuln-agent
 
-LLM-powered vulnerability scanner for your codebase. Supports multiple AI providers and can scan local files, directories, and GitHub repositories.
+LLM-powered vulnerability scanner for web applications and code. Supports multiple AI providers and can scan websites, local files, directories, and GitHub repositories.
 
 ## Features
 
 - 🤖 **Multiple LLM Providers**: OpenAI O3, Anthropic Sonnet 4, Gemini 2.5 Pro/Flash
 - 📁 **Flexible Scanning**: Local files, directories, GitHub repos, and URLs
+- 🌐 **Web Vulnerability Scanning**: Test live websites for security issues (NEW!)
 - 🎯 **Dual Detection**: Rule-based and LLM-based vulnerability detection
 - 📊 **Multiple Output Formats**: Console, JSON, and Markdown reports
 - ⚙️ **Configurable**: Project-specific settings via `.vuln-agentrc.json`
@@ -24,17 +25,31 @@ pnpm add -g vuln-agent
 ### Basic Usage
 
 ```bash
-# Scan local directory with rule-based detection
-vuln-agent ./src
+# Scan a website (default mode is now web)
+vuln-agent scan https://example.com --whitelist example.com
+
+# Scan localhost (always allowed - no whitelist needed!)
+vuln-agent scan http://localhost:3000
+vuln-agent scan http://localhost:5173  # Vite dev server
 
 # Scan with LLM
-vuln-agent --llm gemini-2.5-flash ./src
+vuln-agent scan --llm gemini-2.5-flash https://example.com -w example.com
+
+# Output as JSON
+vuln-agent scan -f json http://localhost:8080 > report.json
+```
+
+### Code Scanning
+
+```bash
+# Scan local directory (specify code mode)
+vuln-agent scan --mode code ./src
 
 # Scan GitHub repository
-vuln-agent --llm anthropic-sonnet4 https://github.com/user/repo
+vuln-agent scan -m code --llm anthropic-sonnet4 https://github.com/user/repo
 
 # Output as Markdown
-vuln-agent --format markdown ./src > report.md
+vuln-agent scan -m code --format markdown ./src > code-report.md
 ```
 
 ### Environment Variables
@@ -49,12 +64,28 @@ export GEMINI_2_5_FLASH_API_KEY="your-key"
 export GITHUB_TOKEN="your-token"  # For higher GitHub API rate limits
 ```
 
+## CLI Options
+
+```bash
+vuln-agent scan [options] <target>
+
+Options:
+  -m, --mode <mode>        Scan mode (code|web) (default: "web")
+  -f, --format <format>    Output format (console|json|markdown) (default: "console")
+  -l, --llm <provider>     LLM provider (openai-o3|anthropic-sonnet4|gemini-2.5-pro|gemini-2.5-flash)
+  -e, --extensions <ext>   File extensions to scan (comma-separated) (default: ".js,.ts,.jsx,.tsx")
+  -i, --ignore <patterns>  Patterns to ignore (comma-separated) (default: "node_modules,.git,dist")
+  -w, --whitelist <hosts>  Allowed hosts for web scanning (comma-separated)
+  -h, --help               Display help for command
+```
+
 ## Configuration
 
 Create `.vuln-agentrc.json` in your project root:
 
 ```json
 {
+  "mode": "code",
   "llm": {
     "provider": "gemini-2.5-flash",
     "temperature": 0.1
@@ -63,6 +94,9 @@ Create `.vuln-agentrc.json` in your project root:
     "extensions": [".js", ".ts", ".jsx", ".tsx", ".py"],
     "ignore": ["node_modules", ".git", "dist", "build"],
     "maxFileSize": 2097152
+  },
+  "web": {
+    "whitelist": ["example.com", "*.example.com"]
   },
   "output": {
     "format": "markdown"

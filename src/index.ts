@@ -7,11 +7,15 @@ import type { LLMProviderType } from './llm/types.js'
 import { createConsoleReporter } from './reporters/console-reporter.js'
 import { createJsonReporter } from './reporters/json-reporter.js'
 import { createMarkdownReporter } from './reporters/markdown-reporter.js'
+import { createWebVulnerabilityScanner } from './scanners/web-scanner.js'
+import { createHttpClient } from './infrastructure/http/client.js'
 
 export interface VulnAgentOptions {
+  mode?: 'code' | 'web'
   extensions?: string[]
   ignore?: string[]
   format?: 'console' | 'json' | 'markdown'
+  whitelist?: string[]
   llm?: {
     provider: LLMProviderType
     apiKey?: string
@@ -19,11 +23,56 @@ export interface VulnAgentOptions {
 }
 
 export const createVulnAgent = (options: VulnAgentOptions = {}) => {
-  const fileReader = createFileReader()
-  const urlReader = createURLReader()
+  // Default to web mode
+  const mode = options.mode || 'web'
+  
+  // Common reporters
   const consoleReporter = createConsoleReporter()
   const jsonReporter = createJsonReporter()
   const markdownReporter = createMarkdownReporter()
+  
+  // Mode-specific setup
+  if (mode === 'web') {
+    return createWebAgent(options, { consoleReporter, jsonReporter, markdownReporter })
+  } else {
+    return createCodeAgent(options, { consoleReporter, jsonReporter, markdownReporter })
+  }
+}
+
+const createWebAgent = (options: VulnAgentOptions, reporters: any) => {
+  const httpClient = createHttpClient({
+    rateLimit: { maxRequests: 60, windowMs: 60000 },
+    timeout: 10000,
+    retries: 3,
+    whitelist: options.whitelist || []
+  })
+  
+  const scanner = createWebVulnerabilityScanner({
+    httpClient,
+    llm: options.llm
+  })
+  
+  return {
+    analyze: async (targetUrl: string) => {
+      const result = await scanner.scan(targetUrl)
+      
+      // Output results
+      if (options.format === 'json') {
+        console.log(reporters.jsonReporter.generate(result))
+      } else if (options.format === 'markdown') {
+        console.log(reporters.markdownReporter.generate(result))
+      } else {
+        console.log(reporters.consoleReporter.generate(result))
+      }
+      
+      return result
+    }
+  }
+}
+
+const createCodeAgent = (options: VulnAgentOptions, reporters: any) => {
+  const fileReader = createFileReader()
+  const urlReader = createURLReader()
 
   // Choose analyzer based on LLM configuration
   const analyzer = options.llm
@@ -71,11 +120,11 @@ export const createVulnAgent = (options: VulnAgentOptions = {}) => {
     const result = await analyzer.analyzeFiles(files)
 
     if (options.format === 'json') {
-      console.log(jsonReporter.generate(result))
+      console.log(reporters.jsonReporter.generate(result))
     } else if (options.format === 'markdown') {
-      console.log(markdownReporter.generate(result))
+      console.log(reporters.markdownReporter.generate(result))
     } else {
-      console.log(consoleReporter.generate(result))
+      console.log(reporters.consoleReporter.generate(result))
     }
 
     return result
