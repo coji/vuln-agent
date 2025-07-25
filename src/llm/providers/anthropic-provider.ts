@@ -15,7 +15,7 @@ export const createAnthropicProvider = (config: LLMConfig): LLMProvider => {
       model,
       prompt,
       temperature: config.temperature || 0.1,
-      maxTokens: config.maxTokens
+      maxTokens: config.maxTokens,
     })
     return text
   }

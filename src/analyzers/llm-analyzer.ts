@@ -1,16 +1,16 @@
 import type { AnalysisResult, Vulnerability } from '../core/types.js'
-import type { LLMConfig } from '../llm/types.js'
 import { createLLMProvider } from '../llm/provider-factory.js'
+import type { LLMConfig } from '../llm/types.js'
 
 export const createLLMAnalyzer = (config: LLMConfig) => {
   const provider = createLLMProvider(config)
-  
+
   const analyzeFile = async (
     content: string,
-    filePath: string
+    filePath: string,
   ): Promise<Vulnerability[]> => {
     const analysis = await provider.analyze(content, `File: ${filePath}`)
-    
+
     return analysis.vulnerabilities.map((vuln, index) => ({
       id: `${provider.name}-${filePath}-${index}`,
       type: vuln.type,
@@ -20,16 +20,16 @@ export const createLLMAnalyzer = (config: LLMConfig) => {
       column: 1,
       message: vuln.description,
       code: vuln.location.snippet || '',
-      rule: vuln.cwe || provider.name
+      rule: vuln.cwe || provider.name,
     }))
   }
-  
+
   const analyzeFiles = async (
-    files: Map<string, string>
+    files: Map<string, string>,
   ): Promise<AnalysisResult> => {
     const startTime = Date.now()
     const allVulnerabilities: Vulnerability[] = []
-    
+
     for (const [filePath, content] of files) {
       try {
         const vulnerabilities = await analyzeFile(content, filePath)
@@ -38,17 +38,17 @@ export const createLLMAnalyzer = (config: LLMConfig) => {
         console.error(`Error analyzing ${filePath}:`, error)
       }
     }
-    
+
     return {
       vulnerabilities: allVulnerabilities,
       scannedFiles: files.size,
-      duration: Date.now() - startTime
+      duration: Date.now() - startTime,
     }
   }
-  
+
   return {
     provider,
     analyzeFile,
-    analyzeFiles
+    analyzeFiles,
   }
 }

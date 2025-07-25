@@ -34,10 +34,10 @@ export const createFileReader = () => {
   ): Promise<Map<string, string>> => {
     const opts = { ...defaultOptions, ...options }
     const files = new Map<string, string>()
-    
+
     // Check if target is a file or directory
     const stats = await stat(targetPath)
-    
+
     if (stats.isFile()) {
       const ext = extname(targetPath)
       if (!opts.extensions || opts.extensions.includes(ext)) {

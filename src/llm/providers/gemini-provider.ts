@@ -13,16 +13,18 @@ export const createGeminiProvider = (config: LLMConfig): LLMProvider => {
     'gemini-2.5-flash': 'gemini-2.5-flash',
   }
 
-  const model = config.provider === 'gemini-2.5-pro' || config.provider === 'gemini-2.5-flash'
-    ? google(modelMap[config.provider])
-    : google('gemini-2.5-flash')
+  const model =
+    config.provider === 'gemini-2.5-pro' ||
+    config.provider === 'gemini-2.5-flash'
+      ? google(modelMap[config.provider])
+      : google('gemini-2.5-flash')
 
   const makeRequest = async (prompt: string): Promise<string> => {
     const { text } = await generateText({
       model,
       prompt,
       temperature: config.temperature || 0.1,
-      maxTokens: config.maxTokens
+      maxTokens: config.maxTokens,
     })
     return text
   }

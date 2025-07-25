@@ -34,12 +34,14 @@ export interface ConfigFile {
 const CONFIG_FILE_NAMES = [
   '.vuln-agentrc.json',
   '.vuln-agentrc',
-  'vuln-agent.config.json'
+  'vuln-agent.config.json',
 ]
 
-export const loadConfig = async (startPath: string = process.cwd()): Promise<ConfigFile | null> => {
+export const loadConfig = async (
+  startPath: string = process.cwd(),
+): Promise<ConfigFile | null> => {
   let currentPath = startPath
-  
+
   while (currentPath !== '/') {
     for (const configFileName of CONFIG_FILE_NAMES) {
       try {
@@ -52,42 +54,42 @@ export const loadConfig = async (startPath: string = process.cwd()): Promise<Con
         // File not found or invalid JSON, continue searching
       }
     }
-    
+
     // Move up one directory
     currentPath = join(currentPath, '..')
   }
-  
+
   return null
 }
 
 export const mergeConfigs = (
   fileConfig: ConfigFile | null,
-  cliOptions: VulnAgentOptions
+  cliOptions: VulnAgentOptions,
 ): VulnAgentOptions => {
   if (!fileConfig) {
     return cliOptions
   }
-  
+
   const merged: VulnAgentOptions = { ...cliOptions }
-  
+
   // Merge LLM config
   if (fileConfig.llm && !cliOptions.llm) {
     merged.llm = {
       provider: fileConfig.llm.provider,
-      apiKey: fileConfig.llm.apiKey
+      apiKey: fileConfig.llm.apiKey,
     }
   }
-  
+
   // Merge scan config
   if (fileConfig.scan) {
     merged.extensions = cliOptions.extensions || fileConfig.scan.extensions
     merged.ignore = cliOptions.ignore || fileConfig.scan.ignore
   }
-  
+
   // Merge output config
   if (fileConfig.output && !cliOptions.format) {
     merged.format = fileConfig.output.format
   }
-  
+
   return merged
 }

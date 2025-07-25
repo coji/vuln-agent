@@ -1,0 +1,150 @@
+name: 'Vuln Agent Security Scanner'
+description: 'LLM-powered vulnerability scanner for your codebase'
+author: 'vuln-agent'
+
+branding:
+  icon: 'shield'
+  color: 'red'
+
+inputs:
+  path:
+    description: 'Path to scan (file, directory, or URL)'
+    required: false
+    default: '.'
+
+  llm-provider:
+    description: 'LLM provider to use (openai-o3, anthropic-sonnet4, gemini-2.5-pro, gemini-2.5-flash)'
+    required: false
+    default: ''
+
+  format:
+    description: 'Output format (console, json, markdown)'
+    required: false
+    default: 'console'
+
+  extensions:
+    description: 'File extensions to scan (comma-separated)'
+    required: false
+    default: '.js,.ts,.jsx,.tsx'
+
+  ignore:
+    description: 'Patterns to ignore (comma-separated)'
+    required: false
+    default: 'node_modules,.git,dist'
+
+  fail-on-vulnerabilities:
+    description: 'Fail the action if vulnerabilities are found'
+    required: false
+    default: 'true'
+
+  upload-results:
+    description: 'Upload scan results as artifact'
+    required: false
+    default: 'false'
+
+  comment-on-pr:
+    description: 'Comment scan results on pull request'
+    required: false
+    default: 'false'
+
+outputs:
+  vulnerability-count:
+    description: 'Number of vulnerabilities found'
+
+  scan-report:
+    description: 'Path to the scan report file'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install vuln-agent
+      shell: bash
+      run: |
+        npm install -g vuln-agent@latest
+
+    - name: Run vulnerability scan
+      id: scan
+      shell: bash
+      env:
+        OPENAI_O3_API_KEY: ${{ env.OPENAI_O3_API_KEY }}
+        ANTHROPIC_SONNET4_API_KEY: ${{ env.ANTHROPIC_SONNET4_API_KEY }}
+        GEMINI_2_5_PRO_API_KEY: ${{ env.GEMINI_2_5_PRO_API_KEY }}
+        GEMINI_2_5_FLASH_API_KEY: ${{ env.GEMINI_2_5_FLASH_API_KEY }}
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        # Build command
+        CMD="vuln-agent"
+
+        if [ -n "${{ inputs.llm-provider }}" ]; then
+          CMD="$CMD --llm ${{ inputs.llm-provider }}"
+        fi
+
+        CMD="$CMD --format ${{ inputs.format }}"
+        CMD="$CMD --extensions ${{ inputs.extensions }}"
+        CMD="$CMD --ignore ${{ inputs.ignore }}"
+        CMD="$CMD ${{ inputs.path }}"
+
+        # Run scan and capture output
+        if [ "${{ inputs.format }}" = "json" ]; then
+          $CMD > scan-results.json
+          VULN_COUNT=$(jq '.vulnerabilities | length' scan-results.json)
+          echo "vulnerability-count=$VULN_COUNT" >> $GITHUB_OUTPUT
+          echo "scan-report=scan-results.json" >> $GITHUB_OUTPUT
+        elif [ "${{ inputs.format }}" = "markdown" ]; then
+          $CMD > scan-results.md
+          # Extract vulnerability count from markdown (look for "Vulnerabilities Found: X")
+          VULN_COUNT=$(grep -oP 'Vulnerabilities Found: \K\d+' scan-results.md || echo "0")
+          echo "vulnerability-count=$VULN_COUNT" >> $GITHUB_OUTPUT
+          echo "scan-report=scan-results.md" >> $GITHUB_OUTPUT
+        else
+          $CMD | tee scan-results.txt
+          # Extract vulnerability count from console output
+          VULN_COUNT=$(grep -oP 'Found \K\d+(?= vulnerabilities)' scan-results.txt || echo "0")
+          echo "vulnerability-count=$VULN_COUNT" >> $GITHUB_OUTPUT
+          echo "scan-report=scan-results.txt" >> $GITHUB_OUTPUT
+        fi
+
+        # Fail if vulnerabilities found and fail-on-vulnerabilities is true
+        if [ "${{ inputs.fail-on-vulnerabilities }}" = "true" ] && [ "$VULN_COUNT" -gt 0 ]; then
+          echo "❌ Found $VULN_COUNT vulnerabilities"
+          exit 1
+        else
+          echo "✅ Found $VULN_COUNT vulnerabilities"
+        fi
+
+    - name: Upload scan results
+      if: inputs.upload-results == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: vuln-agent-scan-results
+        path: ${{ steps.scan.outputs.scan-report }}
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request' && inputs.comment-on-pr == 'true' && inputs.format == 'markdown'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('${{ steps.scan.outputs.scan-report }}', 'utf8');
+
+          // Add collapsible section for long reports
+          const comment = `## 🔍 Vulnerability Scan Results
+
+          <details>
+          <summary>View full report</summary>
+
+          ${report}
+
+          </details>`;
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });

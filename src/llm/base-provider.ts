@@ -1,19 +1,25 @@
-import type { LLMProvider, VulnerabilityAnalysis } from './types.js'
 import { formatPrompt } from './prompt-templates.js'
+import type { LLMProvider, VulnerabilityAnalysis } from './types.js'
 
-export const parseAnalysisResponse = (response: string): VulnerabilityAnalysis => {
+export const parseAnalysisResponse = (
+  response: string,
+): VulnerabilityAnalysis => {
   try {
     // Extract JSON from the response if it's wrapped in markdown code blocks
-    const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/) || response.match(/```\s*([\s\S]*?)\s*```/)
+    const jsonMatch =
+      response.match(/```json\s*([\s\S]*?)\s*```/) ||
+      response.match(/```\s*([\s\S]*?)\s*```/)
     const jsonString = jsonMatch ? jsonMatch[1] : response
-    
+
     const parsed = JSON.parse(jsonString)
-    
+
     // Validate the response structure
     if (!parsed.vulnerabilities || !Array.isArray(parsed.vulnerabilities)) {
-      throw new Error('Invalid response structure: missing vulnerabilities array')
+      throw new Error(
+        'Invalid response structure: missing vulnerabilities array',
+      )
     }
-    
+
     return parsed as VulnerabilityAnalysis
   } catch (error) {
     console.error('Failed to parse LLM response:', error)
@@ -21,14 +27,14 @@ export const parseAnalysisResponse = (response: string): VulnerabilityAnalysis =
     return {
       vulnerabilities: [],
       summary: 'Failed to analyze code due to parsing error',
-      confidence: 0
+      confidence: 0,
     }
   }
 }
 
 export const createBaseProvider = (
   name: string,
-  makeRequest: (prompt: string) => Promise<string>
+  makeRequest: (prompt: string) => Promise<string>,
 ): LLMProvider => {
   return {
     name,
@@ -36,6 +42,6 @@ export const createBaseProvider = (
       const prompt = formatPrompt(code, context)
       const response = await makeRequest(prompt)
       return parseAnalysisResponse(response)
-    }
+    },
   }
 }

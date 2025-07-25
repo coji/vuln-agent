@@ -42,7 +42,8 @@ Focus on:
 Be thorough but avoid false positives. Only report issues you're confident about.`
 
 export const formatPrompt = (code: string, context?: string): string => {
-  return VULNERABILITY_ANALYSIS_PROMPT
-    .replace('{code}', code)
-    .replace('{context}', context ? `Additional context:\n${context}` : '')
+  return VULNERABILITY_ANALYSIS_PROMPT.replace('{code}', code).replace(
+    '{context}',
+    context ? `Additional context:\n${context}` : '',
+  )
 }

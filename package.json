@@ -1,7 +1,25 @@
 {
   "name": "vuln-agent",
   "version": "1.0.0",
-  "description": "",
+  "description": "LLM-powered vulnerability scanner for your codebase",
+  "keywords": [
+    "security",
+    "vulnerability",
+    "scanner",
+    "llm",
+    "ai",
+    "openai",
+    "anthropic",
+    "gemini"
+  ],
+  "homepage": "https://github.com/coji/vuln-agent",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/coji/vuln-agent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/coji/vuln-agent/issues"
+  },
   "main": "dist/index.js",
   "type": "module",
   "bin": {
@@ -16,7 +34,6 @@
     "typecheck": "tsc -b",
     "validate": "run-p format lint && run-p typecheck test"
   },
-  "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.12.4",

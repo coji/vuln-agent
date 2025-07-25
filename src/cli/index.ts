@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-import { createVulnAgent } from '../index.js'
-import type { LLMProviderType } from '../llm/types.js'
 import { loadConfig, mergeConfigs } from '../core/config.js'
+import { createVulnAgent, type VulnAgentOptions } from '../index.js'
+import type { LLMProviderType } from '../llm/types.js'
 
 const args = process.argv.slice(2)
 
@@ -51,13 +51,13 @@ Examples:
 
 const main = async () => {
   const path = args[args.length - 1]
-  const cliOptions: any = {}
+  const cliOptions: Partial<VulnAgentOptions> = {}
 
   for (let i = 0; i < args.length - 1; i++) {
     if (args[i] === '--llm' && i + 1 < args.length - 1) {
       cliOptions.llm = { provider: args[++i] as LLMProviderType }
     } else if (args[i] === '--format' && i + 1 < args.length - 1) {
-      cliOptions.format = args[++i]
+      cliOptions.format = args[++i] as 'console' | 'json' | 'markdown'
     } else if (args[i] === '--extensions' && i + 1 < args.length - 1) {
       cliOptions.extensions = args[++i].split(',')
     } else if (args[i] === '--ignore' && i + 1 < args.length - 1) {
