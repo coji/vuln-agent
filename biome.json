@@ -8,34 +8,9 @@
   },
   "linter": {
     "enabled": true,
-    "includes": ["**", "!**/worker-configuration.d.ts"],
+    "includes": ["**"],
     "rules": {
-      "recommended": true,
-      "suspicious": {
-        "useAwait": "error",
-        "noRedeclare": "off",
-        "noExplicitAny": "off"
-      },
-      "nursery": {
-        "useUniqueElementIds": "off",
-        "noNestedComponentDefinitions": "off"
-      },
-      "style": {
-        "noNonNullAssertion": "off",
-        "noParameterAssign": "error",
-        "useAsConstAssertion": "error",
-        "useDefaultParameterLast": "error",
-        "useEnumInitializers": "error",
-        "useSelfClosingElements": "error",
-        "useSingleVarDeclarator": "error",
-        "noUnusedTemplateLiteral": "error",
-        "useNumberNamespace": "error",
-        "noInferrableTypes": "error",
-        "noUselessElse": "error"
-      },
-      "a11y": {
-        "useMediaCaption": "off"
-      }
+      "recommended": true
     }
   }
 }
