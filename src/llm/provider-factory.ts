@@ -1,26 +1,25 @@
 import type { LLMConfig, LLMProvider } from './types.js'
 import { createMockProvider } from './providers/mock-provider.js'
+import { createGeminiProvider } from './providers/gemini-provider.js'
+import { createAnthropicProvider } from './providers/anthropic-provider.js'
+import { createOpenAIProvider } from './providers/openai-provider.js'
 
 export const createLLMProvider = (config: LLMConfig): LLMProvider => {
-  // For now, we'll use the mock provider
-  // Real implementations would be added here for each provider
+  if (!config.apiKey || config.apiKey === '') {
+    console.warn(`No API key provided for ${config.provider}, using mock provider`)
+    return createMockProvider()
+  }
   
   switch (config.provider) {
     case 'openai-o3':
-      console.log('OpenAI O3 provider not implemented yet, using mock')
-      return createMockProvider()
+      return createOpenAIProvider(config)
       
     case 'anthropic-sonnet4':
-      console.log('Anthropic Sonnet 4 provider not implemented yet, using mock')
-      return createMockProvider()
+      return createAnthropicProvider(config)
       
     case 'gemini-2.5-pro':
-      console.log('Gemini 2.5 Pro provider not implemented yet, using mock')
-      return createMockProvider()
-      
     case 'gemini-2.5-flash':
-      console.log('Gemini 2.5 Flash provider not implemented yet, using mock')
-      return createMockProvider()
+      return createGeminiProvider(config)
       
     default:
       throw new Error(`Unknown LLM provider: ${config.provider}`)

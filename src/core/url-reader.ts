@@ -92,37 +92,82 @@ export const createURLReader = () => {
         throw new Error('Invalid GitHub repository URL')
       }
       
-      const [owner, repo] = pathParts
+      const [owner, repo, ...rest] = pathParts
+      let branch = ''
+      let subPath = ''
       
-      // Use GitHub API to list files
-      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents`
-      const response = await fetch(apiUrl, {
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'vuln-agent'
-        }
-      })
-      
-      if (!response.ok) {
-        throw new Error(`GitHub API error: ${response.status}`)
+      // Handle URLs like github.com/owner/repo/tree/branch/path
+      if (rest.length >= 2 && rest[0] === 'tree') {
+        branch = rest[1]
+        subPath = rest.slice(2).join('/')
       }
       
-      const contents = await response.json() as any[]
+      // Get default branch if not specified
+      if (!branch) {
+        const repoApiUrl = `https://api.github.com/repos/${owner}/${repo}`
+        const repoResponse = await fetch(repoApiUrl, {
+          headers: {
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'vuln-agent',
+            ...(process.env.GITHUB_TOKEN && {
+              'Authorization': `token ${process.env.GITHUB_TOKEN}`
+            })
+          }
+        })
+        
+        if (!repoResponse.ok) {
+          throw new Error(`GitHub API error: ${repoResponse.status} ${repoResponse.statusText}`)
+        }
+        
+        const repoData = await repoResponse.json() as any
+        branch = repoData.default_branch || 'main'
+      }
       
-      // Filter and fetch files
-      for (const item of contents) {
-        if (item.type === 'file' && item.download_url) {
-          const ext = extname(item.name)
-          if (!options.extensions || options.extensions.includes(ext)) {
-            try {
-              const content = await fetchContent(item.download_url)
-              files.set(item.path, content)
-            } catch (error) {
-              console.error(`Error fetching ${item.path}:`, error)
+      // Recursive function to fetch directory contents
+      const fetchDirectory = async (path: string): Promise<void> => {
+        const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}${branch ? `?ref=${branch}` : ''}`
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'vuln-agent',
+            ...(process.env.GITHUB_TOKEN && {
+              'Authorization': `token ${process.env.GITHUB_TOKEN}`
+            })
+          }
+        })
+        
+        if (!response.ok) {
+          throw new Error(`GitHub API error: ${response.status} ${response.statusText}`)
+        }
+        
+        const contents = await response.json() as any[]
+        
+        // Process each item
+        for (const item of contents) {
+          if (item.type === 'file' && item.download_url) {
+            const ext = extname(item.name)
+            if (!options.extensions || options.extensions.includes(ext)) {
+              // Check file size (GitHub API returns size in bytes)
+              if (!options.maxFileSize || item.size < options.maxFileSize) {
+                try {
+                  const content = await fetchContent(item.download_url)
+                  files.set(item.path, content)
+                } catch (error) {
+                  console.error(`Error fetching ${item.path}:`, error)
+                }
+              }
             }
+          } else if (item.type === 'dir') {
+            // Recursively fetch subdirectories
+            await fetchDirectory(item.path)
           }
         }
       }
+      
+      // Start fetching from the specified path or root
+      await fetchDirectory(subPath)
+      
+      console.log(`Fetched ${files.size} files from ${repoUrl}`)
     } catch (error) {
       console.error(`Error reading GitHub repository:`, error)
     }
