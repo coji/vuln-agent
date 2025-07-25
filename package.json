@@ -9,7 +9,7 @@
     "format:fix": "prettier . --write --experimental-cli",
     "lint": "biome lint .",
     "test": "vitest",
-    "typecheck": "wrangler types && react-router typegen && tsc -b",
+    "typecheck": "tsc -b",
     "validate": "run-p format lint && run-p typecheck test"
   },
   "keywords": [],
@@ -18,10 +18,12 @@
   "packageManager": "pnpm@10.12.4",
   "devDependencies": {
     "@biomejs/biome": "2.1.2",
+    "@types/node": "24.1.0",
     "npm-run-all": "4.1.5",
     "prettier": "3.6.2",
     "prettier-plugin-organize-imports": "4.2.0",
     "tsx": "4.20.3",
+    "typescript": "5.8.3",
     "vitest": "3.2.4"
   }
 }
