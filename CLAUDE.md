@@ -28,6 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Structure
 
 This is a TypeScript project using:
+
 - **Package Manager**: pnpm (v10.12.4)
 - **Formatter**: Prettier with organize-imports plugin
 - **Linter**: Biome
@@ -43,8 +44,9 @@ The project appears to be in early stages with minimal source code structure est
   - Prefer pure functions and function composition
   - Use higher-order functions for abstraction
   - State management through function closures, not class instances
-  
+
 Example:
+
 ```typescript
 // ❌ Don't use classes
 class TaskManager {
@@ -66,3 +68,6 @@ const createTaskManager = () => {
 - **Prefer immutability** - Return new objects/arrays rather than mutating
 - **Use TypeScript strict mode** - Ensure type safety throughout the codebase
 - **Follow existing patterns** - Check existing code for conventions before implementing
+- **Temporary files** - Always create temporary test files in the `.tmp/` directory, never in the project root
+  - Example: `.tmp/test-example.js` instead of `test-example.js`
+  - The `.tmp/` directory is already in `.gitignore`

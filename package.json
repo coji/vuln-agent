@@ -2,9 +2,13 @@
   "name": "vuln-agent",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "type": "module",
+  "bin": {
+    "vuln-agent": "./dist/cli/index.js"
+  },
   "scripts": {
+    "build": "tsc",
     "format": "prettier . --check --experimental-cli",
     "format:fix": "prettier . --write --experimental-cli",
     "lint": "biome lint .",

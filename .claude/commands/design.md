@@ -54,7 +54,7 @@ Create `.tmp/design.md` with the following sections:
 - **公開インターフェース**:
   ```typescript
   interface ComponentA {
-    method1(param: Type): ReturnType;
+    method1(param: Type): ReturnType
   }
   ```
 ````

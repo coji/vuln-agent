@@ -1,1 +1,1 @@
-{"root":["./src/index.ts"],"version":"5.8.3"}
+{"root":["./src/index.ts","./src/analyzers/analyzer.ts","./src/analyzers/pattern-matcher.test.ts","./src/analyzers/pattern-matcher.ts","./src/core/file-reader.ts","./src/core/types.ts","./src/reporters/console-reporter.ts","./src/reporters/json-reporter.ts","./src/rules/default-rules.ts"],"version":"5.8.3"}
