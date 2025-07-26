@@ -15,7 +15,7 @@ export const createMockLLMProvider = (options: MockLLMProviderOptions = {}): LLM
   const { customResponses = {}, verbose = false } = options
   
   return {
-    generateObject: async ({ prompt }) => {
+    generateObject: async <T>({ prompt }: { prompt: string; schema: unknown }) => {
       if (verbose) {
         console.log('🤖 Mock LLM Prompt:', `${prompt.substring(0, 200)}...`)
       }
@@ -23,7 +23,7 @@ export const createMockLLMProvider = (options: MockLLMProviderOptions = {}): LLM
       // Check for custom responses first
       for (const [key, response] of Object.entries(customResponses)) {
         if (prompt.includes(key)) {
-          return { object: response }
+          return { object: response as T }
         }
       }
       
@@ -38,7 +38,7 @@ export const createMockLLMProvider = (options: MockLLMProviderOptions = {}): LLM
               reasoning: 'Using img tag with onerror event to bypass script tag filter',
               technique: 'img-onerror',
               confidence: 0.85
-            }
+            } as T
           }
         }
         
@@ -49,7 +49,7 @@ export const createMockLLMProvider = (options: MockLLMProviderOptions = {}): LLM
             reasoning: 'Basic script tag injection to test for XSS',
             technique: 'script-tag-injection',
             confidence: 0.9
-          }
+          } as T
         }
       }
       
@@ -63,7 +63,7 @@ export const createMockLLMProvider = (options: MockLLMProviderOptions = {}): LLM
               reasoning: 'Boolean-based blind SQL injection for authentication bypass',
               technique: 'boolean-based-blind',
               confidence: 0.85
-            }
+            } as T
           }
         }
         
@@ -74,7 +74,7 @@ export const createMockLLMProvider = (options: MockLLMProviderOptions = {}): LLM
             reasoning: 'Classic SQL injection payload with comment',
             technique: 'union-based',
             confidence: 0.9
-          }
+          } as T
         }
       }
       
@@ -95,7 +95,7 @@ export const createMockLLMProvider = (options: MockLLMProviderOptions = {}): LLM
               filterDetected: null,
               suggestedNextPayload: null,
               remediation: 'Encode all user input before outputting to HTML'
-            }
+            } as T
           }
         }
         
@@ -114,7 +114,7 @@ export const createMockLLMProvider = (options: MockLLMProviderOptions = {}): LLM
               filterDetected: null,
               suggestedNextPayload: null,
               remediation: 'Implement proper HTML encoding and Content Security Policy'
-            }
+            } as T
           }
         }
         
@@ -137,7 +137,7 @@ export const createMockLLMProvider = (options: MockLLMProviderOptions = {}): LLM
               },
               suggestedNextPayload: '<img src=x onerror=alert(1)>',
               remediation: 'Current filtering is incomplete - implement comprehensive HTML encoding'
-            }
+            } as T
           }
         }
       }
@@ -160,7 +160,7 @@ export const createMockLLMProvider = (options: MockLLMProviderOptions = {}): LLM
               filterDetected: null,
               suggestedNextPayload: null,
               remediation: 'Use parameterized queries or prepared statements'
-            }
+            } as T
           }
         }
         
@@ -179,7 +179,7 @@ export const createMockLLMProvider = (options: MockLLMProviderOptions = {}): LLM
               filterDetected: null,
               suggestedNextPayload: null,
               remediation: 'Use parameterized queries and proper authentication'
-            }
+            } as T
           }
         }
       }
@@ -194,7 +194,7 @@ export const createMockLLMProvider = (options: MockLLMProviderOptions = {}): LLM
           filterDetected: null,
           suggestedNextPayload: null,
           remediation: ''
-        }
+        } as T
       }
     }
   }

@@ -1,8 +1,4 @@
-import { createAnalyzer } from './analyzers/analyzer.js'
-import { createLLMAnalyzer } from './analyzers/llm-analyzer.js'
-import { createFileReader } from './core/file-reader.js'
 import type { AnalysisResult } from './core/types.js'
-import { createURLReader } from './core/url-reader.js'
 import type { LLMProviderType } from './llm/types.js'
 import { createConsoleReporter } from './reporters/console-reporter.js'
 import { createJsonReporter } from './reporters/json-reporter.js'
@@ -101,64 +97,19 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
   }
 }
 
-const createCodeAgent = (options: VulnAgentOptions, reporters: Reporters) => {
-  const fileReader = createFileReader()
-  const urlReader = createURLReader()
-
-  // Choose analyzer based on LLM configuration
-  const analyzer = options.llm
-    ? createLLMAnalyzer({
-        provider: options.llm.provider,
-        apiKey:
-          options.llm.apiKey ||
-          process.env[
-            `${options.llm.provider.toUpperCase().replace('-', '_')}_API_KEY`
-          ] ||
-          '',
-      })
-    : createAnalyzer()
-
-  const analyze = async (target: string): Promise<AnalysisResult> => {
-    let files: Map<string, string>
-
-    // Check if target is a URL
-    if (target.startsWith('http://') || target.startsWith('https://')) {
-      // Check if it's a GitHub repository URL (not a specific file)
-      const isGitHubRepo =
-        target.includes('github.com') &&
-        !target.includes('/blob/') &&
-        !target.includes('/raw/') &&
-        !target.includes('raw.githubusercontent.com')
-
-      if (isGitHubRepo) {
-        files = await urlReader.readGitHubRepository(target, {
-          extensions: options.extensions,
-          maxFileSize: 1024 * 1024, // 1MB limit per file
-        })
-      } else {
-        files = await urlReader.readFromURL(target, {
-          extensions: options.extensions,
-        })
-      }
-    } else {
-      // Local file/directory
-      files = await fileReader.readDirectory(target, {
-        extensions: options.extensions,
-        ignore: options.ignore,
-      })
+const createCodeAgent = (_options: VulnAgentOptions, _reporters: Reporters) => {
+  const logger = createLogger('agent')
+  
+  const analyze = async (_target: string): Promise<AnalysisResult> => {
+    logger.error('Code analysis mode is temporarily disabled during LLM-native transformation')
+    logger.info('Please use web mode (-m web) for vulnerability scanning')
+    
+    // Return empty result
+    return {
+      vulnerabilities: [],
+      scannedFiles: 0,
+      duration: 0
     }
-
-    const result = await analyzer.analyzeFiles(files)
-
-    if (options.format === 'json') {
-      console.log(reporters.jsonReporter.generate(result))
-    } else if (options.format === 'markdown') {
-      console.log(reporters.markdownReporter.generate(result))
-    } else {
-      console.log(reporters.consoleReporter.generate(result))
-    }
-
-    return result
   }
 
   return { analyze }

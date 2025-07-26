@@ -45,43 +45,6 @@ export interface WebVulnerability {
   recommendation: string
 }
 
-// Helper function to check security headers
-const checkSecurityHeaders = (response: HttpResponse, url: string): WebVulnerability[] => {
-  const vulnerabilities: WebVulnerability[] = []
-  
-  if (!response.headers['x-frame-options']) {
-    vulnerabilities.push({
-      type: 'Configuration',
-      severity: 'medium',
-      url,
-      method: 'GET',
-      evidence: {
-        request: { url, method: 'GET' },
-        response
-      },
-      description: 'Missing X-Frame-Options header',
-      recommendation: 'Add X-Frame-Options header to prevent clickjacking attacks'
-    })
-  }
-  
-  if (!response.headers['content-security-policy']) {
-    vulnerabilities.push({
-      type: 'Configuration',
-      severity: 'medium',
-      url,
-      method: 'GET',
-      evidence: {
-        request: { url, method: 'GET' },
-        response
-      },
-      description: 'Missing Content-Security-Policy header',
-      recommendation: 'Implement Content Security Policy to prevent XSS attacks'
-    })
-  }
-  
-  return vulnerabilities
-}
-
 export const createWebVulnerabilityScanner = (options: WebScannerOptions) => {
   const { httpClient, llm } = options
   const logger = createLogger('scanner')
@@ -104,10 +67,6 @@ export const createWebVulnerabilityScanner = (options: WebScannerOptions) => {
         url: targetUrl,
         method: 'GET'
       })
-      
-      // Basic security header check
-      const headerVulns = checkSecurityHeaders(baselineResponse, targetUrl);
-      vulnerabilities.push(...headerVulns)
       
       // If LLM is available, test for XSS in common parameters
       if (xssDetector) {
