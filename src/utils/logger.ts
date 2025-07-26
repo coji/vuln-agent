@@ -32,7 +32,7 @@ export interface Logger {
 // Create a logger instance
 export const createLogger = (namespace: string): Logger => {
   const debugLog = createDebug(`vuln-agent:${namespace}`)
-  
+
   return {
     info: (message: string, ...args: unknown[]) => {
       console.log(`ℹ️  ${message}`, ...args)
@@ -45,7 +45,7 @@ export const createLogger = (namespace: string): Logger => {
     },
     debug: (message: string, ...args: unknown[]) => {
       debugLog(message, ...args)
-    }
+    },
   }
 }
 
@@ -69,5 +69,5 @@ export const progress = {
   },
   fail: () => {
     process.stdout.write(' ✗\n')
-  }
+  },
 }

@@ -12,20 +12,28 @@ export const createHttpRequestTool = (config: {
     whitelist: config.whitelist,
     rateLimit: config.rateLimit || { maxRequests: 60, windowMs: 60000 },
     timeout: config.timeout || 10000,
-    retries: 3
+    retries: 3,
   })
 
   return {
     name: 'httpRequest',
     tool: tool({
-      description: 'Send HTTP request to target URL with rate limiting and whitelist protection',
+      description:
+        'Send HTTP request to target URL with rate limiting and whitelist protection',
       parameters: z.object({
         url: z.string().url().describe('The URL to send the request to'),
-        method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'])
+        method: z
+          .enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'])
           .default('GET')
           .describe('HTTP method to use'),
-        headers: z.record(z.string()).optional().describe('HTTP headers to include'),
-        body: z.string().optional().describe('Request body for POST/PUT/PATCH methods'),
+        headers: z
+          .record(z.string())
+          .optional()
+          .describe('HTTP headers to include'),
+        body: z
+          .string()
+          .optional()
+          .describe('Request body for POST/PUT/PATCH methods'),
       }),
       execute: async (params) => {
         try {
@@ -48,7 +56,8 @@ export const createHttpRequestTool = (config: {
         } catch (error) {
           return {
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred',
+            error:
+              error instanceof Error ? error.message : 'Unknown error occurred',
           }
         }
       },

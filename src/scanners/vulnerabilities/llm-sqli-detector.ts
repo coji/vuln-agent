@@ -1,5 +1,5 @@
-import type { LLMProvider } from './llm-tester.js'
 import { z } from 'zod'
+import type { LLMProvider } from './llm-tester.js'
 
 export interface SQLiDetectionContext {
   url: string
@@ -50,13 +50,20 @@ Provide:
           suggestedPayload: z.string(),
           payloadStrategy: z.string(),
           expectedIndicators: z.array(z.string()),
-          likelyDatabase: z.enum(['mysql', 'postgresql', 'mssql', 'oracle', 'sqlite', 'unknown']),
+          likelyDatabase: z.enum([
+            'mysql',
+            'postgresql',
+            'mssql',
+            'oracle',
+            'sqlite',
+            'unknown',
+          ]),
           detectedProtections: z.array(z.string()),
           contextualNotes: z.string(),
         }),
       })
 
       return result.object
-    }
+    },
   }
 }

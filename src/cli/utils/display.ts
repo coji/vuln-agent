@@ -32,12 +32,12 @@ export const displayScanComplete = (result: AnalysisResult) => {
 export const formatSeverity = (severity: string): string => {
   const colors: Record<string, string> = {
     critical: '\x1b[31m', // red
-    high: '\x1b[33m',     // yellow
-    medium: '\x1b[35m',   // magenta
-    low: '\x1b[36m',      // cyan
-    info: '\x1b[90m',     // gray
+    high: '\x1b[33m', // yellow
+    medium: '\x1b[35m', // magenta
+    low: '\x1b[36m', // cyan
+    info: '\x1b[90m', // gray
   }
-  
+
   const color = colors[severity.toLowerCase()] || '\x1b[0m'
   return `${color}${severity.toUpperCase()}\x1b[0m`
 }

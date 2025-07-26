@@ -1,7 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import type { VulnAgentTool } from './types.js'
 import type { VulnerabilityFinding } from '../domain/models/scan-session.js'
+import type { VulnAgentTool } from './types.js'
 
 // In-memory storage for findings (will be replaced with proper storage later)
 const findingsStore = new Map<string, VulnerabilityFinding[]>()
@@ -13,35 +13,46 @@ export const createReportFindingTool = (): VulnAgentTool => {
       description: 'Report and store a confirmed vulnerability finding',
       parameters: z.object({
         sessionId: z.string().describe('Current scan session ID'),
-        finding: z.object({
-          type: z.enum(['XSS', 'SQLi', 'Authentication', 'Configuration', 'Other']),
-          severity: z.enum(['critical', 'high', 'medium', 'low', 'info']),
-          url: z.string(),
-          parameter: z.string().optional(),
-          evidence: z.object({
-            request: z.object({
-              method: z.string(),
-              url: z.string(),
-              headers: z.record(z.string()).optional(),
-              body: z.string().optional(),
+        finding: z
+          .object({
+            type: z.enum([
+              'XSS',
+              'SQLi',
+              'Authentication',
+              'Configuration',
+              'Other',
+            ]),
+            severity: z.enum(['critical', 'high', 'medium', 'low', 'info']),
+            url: z.string(),
+            parameter: z.string().optional(),
+            evidence: z.object({
+              request: z.object({
+                method: z.string(),
+                url: z.string(),
+                headers: z.record(z.string()).optional(),
+                body: z.string().optional(),
+              }),
+              response: z.object({
+                status: z.number(),
+                headers: z.record(z.string()),
+                body: z.string(),
+              }),
+              payload: z.string().optional(),
             }),
-            response: z.object({
-              status: z.number(),
-              headers: z.record(z.string()),
-              body: z.string(),
-            }),
-            payload: z.string().optional(),
-          }),
-          description: z.string(),
-          recommendation: z.string(),
-          confidence: z.number().min(0).max(1),
-        }).describe('Vulnerability details to report'),
-        metadata: z.object({
-          technique: z.string().optional(),
-          cwe: z.string().optional(),
-          owasp: z.string().optional(),
-          references: z.array(z.string()).optional(),
-        }).optional().describe('Additional metadata'),
+            description: z.string(),
+            recommendation: z.string(),
+            confidence: z.number().min(0).max(1),
+          })
+          .describe('Vulnerability details to report'),
+        metadata: z
+          .object({
+            technique: z.string().optional(),
+            cwe: z.string().optional(),
+            owasp: z.string().optional(),
+            references: z.array(z.string()).optional(),
+          })
+          .optional()
+          .describe('Additional metadata'),
       }),
       execute: async (params) => {
         try {
@@ -66,8 +77,11 @@ export const createReportFindingTool = (): VulnAgentTool => {
             parameter: finding.parameter,
             confidence: finding.confidence,
             totalFindingsInSession: sessionFindings.length,
-            criticalCount: sessionFindings.filter(f => f.severity === 'critical').length,
-            highCount: sessionFindings.filter(f => f.severity === 'high').length,
+            criticalCount: sessionFindings.filter(
+              (f) => f.severity === 'critical',
+            ).length,
+            highCount: sessionFindings.filter((f) => f.severity === 'high')
+              .length,
           }
 
           return {
@@ -79,7 +93,10 @@ export const createReportFindingTool = (): VulnAgentTool => {
         } catch (error) {
           return {
             success: false,
-            error: error instanceof Error ? error.message : 'Failed to report finding',
+            error:
+              error instanceof Error
+                ? error.message
+                : 'Failed to report finding',
           }
         }
       },
@@ -88,7 +105,9 @@ export const createReportFindingTool = (): VulnAgentTool => {
 }
 
 // Utility function to get all findings for a session
-export const getSessionFindings = (sessionId: string): VulnerabilityFinding[] => {
+export const getSessionFindings = (
+  sessionId: string,
+): VulnerabilityFinding[] => {
   return findingsStore.get(sessionId) || []
 }
 

@@ -1,17 +1,19 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import type { VulnAgentTool } from './types.js'
 import type { LLMProvider } from '../scanners/vulnerabilities/llm-tester.js'
+import type { VulnAgentTool } from './types.js'
 
 const vulnerabilitySchema = z.object({
   type: z.enum(['XSS', 'SQLi', 'Authentication', 'Configuration', 'Other']),
   severity: z.enum(['critical', 'high', 'medium', 'low', 'info']),
   confidence: z.number().min(0).max(1),
-  evidence: z.array(z.object({
-    type: z.string(),
-    description: z.string(),
-    location: z.string(),
-  })),
+  evidence: z.array(
+    z.object({
+      type: z.string(),
+      description: z.string(),
+      location: z.string(),
+    }),
+  ),
   description: z.string(),
   remediation: z.string(),
 })
@@ -20,24 +22,32 @@ export const createAnalyzeResponseTool = (llm: LLMProvider): VulnAgentTool => {
   return {
     name: 'analyzeResponse',
     tool: tool({
-      description: 'Analyze HTTP response for security vulnerabilities using LLM',
+      description:
+        'Analyze HTTP response for security vulnerabilities using LLM',
       parameters: z.object({
-        response: z.object({
-          status: z.number(),
-          headers: z.record(z.string()),
-          body: z.string(),
-          url: z.string(),
-        }).describe('The HTTP response to analyze'),
-        context: z.object({
-          request: z.object({
-            method: z.string(),
+        response: z
+          .object({
+            status: z.number(),
+            headers: z.record(z.string()),
+            body: z.string(),
             url: z.string(),
-            headers: z.record(z.string()).optional(),
-            body: z.string().optional(),
-          }).optional(),
-          previousFindings: z.array(z.string()).optional(),
-          targetInfo: z.any().optional(),
-        }).optional().describe('Additional context for analysis'),
+          })
+          .describe('The HTTP response to analyze'),
+        context: z
+          .object({
+            request: z
+              .object({
+                method: z.string(),
+                url: z.string(),
+                headers: z.record(z.string()).optional(),
+                body: z.string().optional(),
+              })
+              .optional(),
+            previousFindings: z.array(z.string()).optional(),
+            targetInfo: z.any().optional(),
+          })
+          .optional()
+          .describe('Additional context for analysis'),
       }),
       execute: async (params) => {
         try {
@@ -48,18 +58,26 @@ Status: ${params.response.status}
 Headers: ${JSON.stringify(params.response.headers, null, 2)}
 Body (first 5000 chars): ${params.response.body.substring(0, 5000)}
 
-${params.context?.request ? `
+${
+  params.context?.request
+    ? `
 Request details:
 Method: ${params.context.request.method}
 URL: ${params.context.request.url}
 Headers: ${JSON.stringify(params.context.request.headers || {}, null, 2)}
 Body: ${params.context.request.body || 'None'}
-` : ''}
+`
+    : ''
+}
 
-${params.context?.previousFindings ? `
+${
+  params.context?.previousFindings
+    ? `
 Previous findings in this scan:
 ${params.context.previousFindings.join('\n')}
-` : ''}
+`
+    : ''
+}
 
 Analyze for:
 1. Missing security headers (X-Frame-Options, CSP, etc.)
@@ -77,10 +95,12 @@ Only report actual vulnerabilities with concrete evidence.`
               vulnerabilities: z.array(vulnerabilitySchema),
               securityHeaders: z.object({
                 missing: z.array(z.string()),
-                misconfigured: z.array(z.object({
-                  header: z.string(),
-                  issue: z.string(),
-                })),
+                misconfigured: z.array(
+                  z.object({
+                    header: z.string(),
+                    issue: z.string(),
+                  }),
+                ),
               }),
               suspiciousPatterns: z.array(z.string()),
             }),

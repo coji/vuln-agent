@@ -1,8 +1,8 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import type { VulnAgentTool } from './types.js'
 import type { ScanStrategy } from '../domain/models/scan-session.js'
 import type { LLMProvider } from '../scanners/vulnerabilities/llm-tester.js'
+import type { VulnAgentTool } from './types.js'
 
 // In-memory strategy store (will be replaced with proper storage later)
 const strategyStore = new Map<string, ScanStrategy>()
@@ -14,41 +14,52 @@ export const createUpdateStrategyTool = (llm: LLMProvider): VulnAgentTool => {
       description: 'Update scan strategy based on findings and progress',
       parameters: z.object({
         sessionId: z.string().describe('Current scan session ID'),
-        currentState: z.object({
-          completedSteps: z.number(),
-          remainingSteps: z.number(),
-          findings: z.array(z.object({
-            type: z.string(),
-            severity: z.string(),
-            target: z.string(),
-          })),
-          testedEndpoints: z.array(z.string()),
-          discoveredEndpoints: z.array(z.string()),
-          blockedPayloads: z.array(z.string()).optional(),
-          technologies: z.array(z.string()).optional(),
-        }).describe('Current scan state'),
-        currentStrategy: z.object({
-          focusAreas: z.array(z.string()),
-          skipPatterns: z.array(z.string()),
-          maxDepth: z.number(),
-          testIntensity: z.enum(['light', 'normal', 'thorough']),
-        }).optional().describe('Current strategy if exists'),
+        currentState: z
+          .object({
+            completedSteps: z.number(),
+            remainingSteps: z.number(),
+            findings: z.array(
+              z.object({
+                type: z.string(),
+                severity: z.string(),
+                target: z.string(),
+              }),
+            ),
+            testedEndpoints: z.array(z.string()),
+            discoveredEndpoints: z.array(z.string()),
+            blockedPayloads: z.array(z.string()).optional(),
+            technologies: z.array(z.string()).optional(),
+          })
+          .describe('Current scan state'),
+        currentStrategy: z
+          .object({
+            focusAreas: z.array(z.string()),
+            skipPatterns: z.array(z.string()),
+            maxDepth: z.number(),
+            testIntensity: z.enum(['light', 'normal', 'thorough']),
+          })
+          .optional()
+          .describe('Current strategy if exists'),
       }),
       execute: async (params) => {
         try {
           // Get current strategy or default
-          const currentStrategy = params.currentStrategy || strategyStore.get(params.sessionId) || {
-            focusAreas: [],
-            skipPatterns: [],
-            maxDepth: 3,
-            testIntensity: 'normal' as const,
-          }
+          const currentStrategy = params.currentStrategy ||
+            strategyStore.get(params.sessionId) || {
+              focusAreas: [],
+              skipPatterns: [],
+              maxDepth: 3,
+              testIntensity: 'normal' as const,
+            }
 
           // Calculate progress
-          const totalSteps = params.currentState.completedSteps + params.currentState.remainingSteps
-          const progressPercentage = (params.currentState.completedSteps / totalSteps) * 100
-          const criticalFindings = params.currentState.findings.filter(f => 
-            f.severity === 'critical' || f.severity === 'high'
+          const totalSteps =
+            params.currentState.completedSteps +
+            params.currentState.remainingSteps
+          const progressPercentage =
+            (params.currentState.completedSteps / totalSteps) * 100
+          const criticalFindings = params.currentState.findings.filter(
+            (f) => f.severity === 'critical' || f.severity === 'high',
           ).length
 
           // Use LLM to determine strategy adjustments
@@ -59,11 +70,16 @@ Findings: ${params.currentState.findings.length} total, ${criticalFindings} crit
 
 Current findings by type:
 ${Object.entries(
-  params.currentState.findings.reduce((acc, f) => {
-    acc[f.type] = (acc[f.type] || 0) + 1
-    return acc
-  }, {} as Record<string, number>)
-).map(([type, count]) => `- ${type}: ${count}`).join('\n')}
+  params.currentState.findings.reduce(
+    (acc, f) => {
+      acc[f.type] = (acc[f.type] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>,
+  ),
+)
+  .map(([type, count]) => `- ${type}: ${count}`)
+  .join('\n')}
 
 Tested endpoints: ${params.currentState.testedEndpoints.length}
 Discovered but untested: ${params.currentState.discoveredEndpoints.length}
@@ -93,11 +109,13 @@ Based on the findings and progress, recommend:
                 testIntensity: z.enum(['light', 'normal', 'thorough']),
                 reasoning: z.string(),
               }),
-              tactics: z.array(z.object({
-                technique: z.string(),
-                description: z.string(),
-                priority: z.enum(['high', 'medium', 'low']),
-              })),
+              tactics: z.array(
+                z.object({
+                  technique: z.string(),
+                  description: z.string(),
+                  priority: z.enum(['high', 'medium', 'low']),
+                }),
+              ),
               adjustments: z.array(z.string()),
             }),
           })
@@ -113,8 +131,9 @@ Based on the findings and progress, recommend:
           strategyStore.set(params.sessionId, newStrategy)
 
           // Determine if significant changes were made
-          const hasSignificantChanges = 
-            JSON.stringify(currentStrategy.focusAreas) !== JSON.stringify(newStrategy.focusAreas) ||
+          const hasSignificantChanges =
+            JSON.stringify(currentStrategy.focusAreas) !==
+              JSON.stringify(newStrategy.focusAreas) ||
             currentStrategy.testIntensity !== newStrategy.testIntensity
 
           return {
@@ -129,7 +148,8 @@ Based on the findings and progress, recommend:
         } catch (error) {
           return {
             success: false,
-            error: error instanceof Error ? error.message : 'Strategy update failed',
+            error:
+              error instanceof Error ? error.message : 'Strategy update failed',
           }
         }
       },
@@ -138,7 +158,9 @@ Based on the findings and progress, recommend:
 }
 
 // Utility functions
-export const getSessionStrategy = (sessionId: string): ScanStrategy | undefined => {
+export const getSessionStrategy = (
+  sessionId: string,
+): ScanStrategy | undefined => {
   return strategyStore.get(sessionId)
 }
 

@@ -1,10 +1,10 @@
 import { z } from 'zod'
-import type { 
-  VulnerabilityTestContext, 
-  PayloadGenerationResult, 
+import type {
+  LLMVulnerabilityTester,
+  PayloadGenerationResult,
   VulnerabilityAnalysisResult,
+  VulnerabilityTestContext,
   VulnerabilityTestResult,
-  LLMVulnerabilityTester 
 } from './types.js'
 
 export interface LLMProvider {
@@ -14,11 +14,12 @@ export interface LLMProvider {
   }) => Promise<{ object: T }>
 }
 
-export const createLLMVulnerabilityTester = (llm: LLMProvider): LLMVulnerabilityTester => {
-  
+export const createLLMVulnerabilityTester = (
+  llm: LLMProvider,
+): LLMVulnerabilityTester => {
   const generatePayload = async (
-    context: VulnerabilityTestContext, 
-    vulnerabilityType: string
+    context: VulnerabilityTestContext,
+    vulnerabilityType: string,
   ): Promise<PayloadGenerationResult> => {
     const prompt = `You are a security researcher testing for ${vulnerabilityType} vulnerabilities.
 
@@ -29,21 +30,28 @@ Target context:
 - HTTP Method: ${context.method}
 - Detected technologies: ${context.detectedTechnologies?.join(', ') || 'Unknown'}
 
-${context.previousAttempts && context.previousAttempts.length > 0 ? `
+${
+  context.previousAttempts && context.previousAttempts.length > 0
+    ? `
 Previous attempts:
-${context.previousAttempts.map((a, i) => 
-  `${i + 1}. Payload: ${a.payload}
+${context.previousAttempts
+  .map(
+    (a, i) =>
+      `${i + 1}. Payload: ${a.payload}
    Result: ${a.result}
    ${a.result === 'blocked' ? 'Likely filtered or blocked by WAF' : ''}
    ${a.result === 'reflected' ? 'Payload was reflected in response' : ''}
-   ${a.result === 'no_change' ? 'No visible change in response' : ''}`
-).join('\n\n')}
+   ${a.result === 'no_change' ? 'No visible change in response' : ''}`,
+  )
+  .join('\n\n')}
 
 Based on previous failures, adjust your approach:
 - If blocked: Try encoding, obfuscation, or alternative vectors
 - If no change: Try different injection points or techniques
 - Learn from what worked or failed
-` : ''}
+`
+    : ''
+}
 
 Generate an optimized ${vulnerabilityType} payload that:
 1. Is appropriate for the parameter location (${context.parameterLocation})
@@ -65,14 +73,16 @@ Provide:
 
     const schema = z.object({
       payload: z.string().describe('The vulnerability test payload'),
-      reasoning: z.string().describe('Explanation of why this payload was chosen'),
+      reasoning: z
+        .string()
+        .describe('Explanation of why this payload was chosen'),
       technique: z.string().describe('Name of the technique being used'),
-      confidence: z.number().min(0).max(1).describe('Confidence level')
+      confidence: z.number().min(0).max(1).describe('Confidence level'),
     })
 
     const { object } = await llm.generateObject({
       prompt,
-      schema
+      schema,
     })
 
     return object
@@ -80,7 +90,7 @@ Provide:
 
   const analyzeResponse = async (
     context: VulnerabilityTestContext,
-    testResult: VulnerabilityTestResult
+    testResult: VulnerabilityTestResult,
   ): Promise<VulnerabilityAnalysisResult> => {
     const prompt = `Analyze if this response indicates a successful ${testResult.vulnerabilityType || 'XSS'} vulnerability.
 
@@ -123,25 +133,45 @@ Determine:
 5. What payload might work better next?`
 
     const schema = z.object({
-      isVulnerable: z.boolean().describe('Whether the vulnerability is confirmed'),
-      confidence: z.number().min(0).max(1).describe('Confidence in the assessment'),
-      evidence: z.array(z.object({
-        type: z.string().describe('Type of evidence found'),
-        description: z.string().describe('Description of the evidence'),
-        location: z.string().optional().describe('Where in the response')
-      })).describe('Evidence supporting the conclusion'),
-      severity: z.enum(['low', 'medium', 'high', 'critical']).describe('Vulnerability severity'),
-      remediation: z.string().describe('Recommended fix for this vulnerability'),
-      suggestedNextPayload: z.string().optional().describe('Next payload to try if not conclusive'),
-      filterDetected: z.object({
-        type: z.string().describe('Type of filter detected'),
-        bypass: z.string().describe('Suggested bypass technique')
-      }).optional().describe('Details if a security filter was detected')
+      isVulnerable: z
+        .boolean()
+        .describe('Whether the vulnerability is confirmed'),
+      confidence: z
+        .number()
+        .min(0)
+        .max(1)
+        .describe('Confidence in the assessment'),
+      evidence: z
+        .array(
+          z.object({
+            type: z.string().describe('Type of evidence found'),
+            description: z.string().describe('Description of the evidence'),
+            location: z.string().optional().describe('Where in the response'),
+          }),
+        )
+        .describe('Evidence supporting the conclusion'),
+      severity: z
+        .enum(['low', 'medium', 'high', 'critical'])
+        .describe('Vulnerability severity'),
+      remediation: z
+        .string()
+        .describe('Recommended fix for this vulnerability'),
+      suggestedNextPayload: z
+        .string()
+        .optional()
+        .describe('Next payload to try if not conclusive'),
+      filterDetected: z
+        .object({
+          type: z.string().describe('Type of filter detected'),
+          bypass: z.string().describe('Suggested bypass technique'),
+        })
+        .optional()
+        .describe('Details if a security filter was detected'),
     })
 
     const { object } = await llm.generateObject({
       prompt,
-      schema
+      schema,
     })
 
     return object
@@ -149,6 +179,6 @@ Determine:
 
   return {
     generatePayload,
-    analyzeResponse
+    analyzeResponse,
   }
 }

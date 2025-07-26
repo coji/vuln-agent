@@ -45,6 +45,7 @@ src/
 ```
 
 **主な差分:**
+
 - ❌ **domain層が未実装** - モデル定義が分散している
 - ❌ **Vercel AI SDK Tools未使用** - 独自のLLM統合実装
 - ⚠️ **構造が異なる** - analyzers/scannersに機能が分かれている
@@ -54,17 +55,18 @@ src/
 
 #### 設計されたTools
 
-| Tool名 | 設計内容 | 実装状況 |
-|--------|----------|----------|
-| httpRequest | HTTPリクエスト送信 | ⚠️ 部分的（HTTPクライアントのみ） |
-| analyzeResponse | レスポンス分析 | ⚠️ 部分的（LLMによる分析あり） |
-| extractLinks | リンク・エンドポイント抽出 | ❌ 未実装 |
-| testPayload | ペイロードテスト | ⚠️ 部分的（XSS/SQLi検出のみ） |
-| reportFinding | 脆弱性報告 | ⚠️ 部分的（レポーター機能のみ） |
-| manageTasks | タスク管理 | ❌ 未実装 |
-| updateStrategy | 戦略更新 | ❌ 未実装 |
+| Tool名          | 設計内容                   | 実装状況                          |
+| --------------- | -------------------------- | --------------------------------- |
+| httpRequest     | HTTPリクエスト送信         | ⚠️ 部分的（HTTPクライアントのみ） |
+| analyzeResponse | レスポンス分析             | ⚠️ 部分的（LLMによる分析あり）    |
+| extractLinks    | リンク・エンドポイント抽出 | ❌ 未実装                         |
+| testPayload     | ペイロードテスト           | ⚠️ 部分的（XSS/SQLi検出のみ）     |
+| reportFinding   | 脆弱性報告                 | ⚠️ 部分的（レポーター機能のみ）   |
+| manageTasks     | タスク管理                 | ❌ 未実装                         |
+| updateStrategy  | 戦略更新                   | ❌ 未実装                         |
 
 **主な差分:**
+
 - ❌ **Vercel AI SDK Tool形式ではない** - 独自実装
 - ❌ **自律的な探索機能なし** - 100ステップの自動探索は未実装
 - ❌ **タスク管理システムなし** - エージェントの記憶保持機能なし
@@ -93,12 +95,14 @@ src/
 **実装状況: ❌ 完全未実装**
 
 設計されていた機能：
+
 - 視覚的なHTMLレポート
 - グラフ表示（Chart.js）
 - Markdownコピー機能
 - 単一HTMLファイル出力
 
 現状：
+
 - JSON/Markdown/Consoleレポートのみ
 - HTMLレポート生成機能なし
 
@@ -107,12 +111,14 @@ src/
 **実装状況: ❌ 完全未実装**
 
 設計されていた機能：
+
 - manageTasks Toolによるタスク管理
 - 優先順位付けと動的調整
 - 進捗の可視化
 - エージェントの記憶保持
 
 現状：
+
 - 単純なスキャン実行のみ
 - タスク管理システムなし
 
@@ -241,12 +247,15 @@ src/
 ## 7. 発見されたルールベース実装の詳細
 
 ### 7.1 pattern-matcher.ts
+
 - 正規表現によるパターンマッチング機能
 - 行・列番号の計算ロジック
 - 静的なルールに基づく脆弱性検出
 
 ### 7.2 default-rules.ts
+
 以下のハードコードされたルール:
+
 - `hardcoded-secret` - APIキーやパスワードの正規表現検出
 - `sql-injection` - SQLインジェクションの正規表現パターン
 - `eval-usage` - eval()使用の検出
@@ -254,6 +263,7 @@ src/
 - `insecure-random` - Math.random()の検出
 
 ### 7.3 その他のルールベース実装
+
 - セキュリティヘッダーのハードコードチェック（web-scanner.ts）
 - XSS/SQLiの固定ペイロード（scanners/vulnerabilities/）
 

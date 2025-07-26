@@ -77,7 +77,7 @@ export const STEP_CONTEXT_TEMPLATE = (
   pendingTasks: number,
   completedEndpoints: string[],
   currentFocus: string,
-  nextTasks: string[]
+  nextTasks: string[],
 ) => `## Current Status
 
 **Progress**: Step ${step}/${maxSteps} (${Math.round((step / maxSteps) * 100)}%)
@@ -87,7 +87,10 @@ export const STEP_CONTEXT_TEMPLATE = (
 **Current Focus**: ${currentFocus}
 
 ## Recent Activity
-${completedEndpoints.slice(-3).map(ep => `✓ Tested: ${ep}`).join('\n')}
+${completedEndpoints
+  .slice(-3)
+  .map((ep) => `✓ Tested: ${ep}`)
+  .join('\n')}
 
 ## Next Priority Tasks
 ${nextTasks.map((task, i) => `${i + 1}. ${task}`).join('\n')}

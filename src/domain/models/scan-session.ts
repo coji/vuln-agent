@@ -10,7 +10,12 @@ export interface ScanSession {
   strategy: ScanStrategy
 }
 
-export type ScanState = 'initializing' | 'scanning' | 'analyzing' | 'completed' | 'failed'
+export type ScanState =
+  | 'initializing'
+  | 'scanning'
+  | 'analyzing'
+  | 'completed'
+  | 'failed'
 
 export interface VulnerabilityFinding {
   id: string
@@ -19,8 +24,17 @@ export interface VulnerabilityFinding {
   url: string
   parameter?: string
   evidence: {
-    request: any
-    response: any
+    request: {
+      method: string
+      url: string
+      headers?: Record<string, string>
+      body?: string
+    }
+    response: {
+      status: number
+      headers: Record<string, string>
+      body: string
+    }
     payload?: string
   }
   description: string

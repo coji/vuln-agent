@@ -1,5 +1,5 @@
-import type { LLMProvider } from './llm-tester.js'
 import { z } from 'zod'
+import type { LLMProvider } from './llm-tester.js'
 
 export interface XSSDetectionContext {
   url: string
@@ -55,6 +55,6 @@ Provide:
       })
 
       return result.object
-    }
+    },
   }
 }

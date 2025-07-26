@@ -6,7 +6,12 @@ export interface HttpResponse {
 
 export interface VulnerabilityAttempt {
   payload: string
-  result: 'reflected' | 'sql_error_exposed' | 'blocked' | 'server_error' | 'no_change'
+  result:
+    | 'reflected'
+    | 'sql_error_exposed'
+    | 'blocked'
+    | 'server_error'
+    | 'no_change'
   response: HttpResponse
 }
 
@@ -53,6 +58,12 @@ export interface VulnerabilityTestResult {
 }
 
 export interface LLMVulnerabilityTester {
-  generatePayload: (context: VulnerabilityTestContext, vulnerabilityType: string) => Promise<PayloadGenerationResult>
-  analyzeResponse: (context: VulnerabilityTestContext, testResult: VulnerabilityTestResult) => Promise<VulnerabilityAnalysisResult>
+  generatePayload: (
+    context: VulnerabilityTestContext,
+    vulnerabilityType: string,
+  ) => Promise<PayloadGenerationResult>
+  analyzeResponse: (
+    context: VulnerabilityTestContext,
+    testResult: VulnerabilityTestResult,
+  ) => Promise<VulnerabilityAnalysisResult>
 }

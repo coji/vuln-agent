@@ -1,17 +1,22 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import type { VulnAgentTool } from './types.js'
 import type { LLMProvider } from '../scanners/vulnerabilities/llm-tester.js'
+import type { VulnAgentTool } from './types.js'
 
 export const createExtractLinksTool = (llm: LLMProvider): VulnAgentTool => {
   return {
     name: 'extractLinks',
     tool: tool({
-      description: 'Extract links, endpoints, and forms from HTML/JavaScript content using LLM',
+      description:
+        'Extract links, endpoints, and forms from HTML/JavaScript content using LLM',
       parameters: z.object({
         content: z.string().describe('HTML or JavaScript content to analyze'),
-        baseUrl: z.string().url().describe('Base URL for resolving relative links'),
-        contentType: z.enum(['html', 'javascript', 'json', 'unknown'])
+        baseUrl: z
+          .string()
+          .url()
+          .describe('Base URL for resolving relative links'),
+        contentType: z
+          .enum(['html', 'javascript', 'json', 'unknown'])
           .default('unknown')
           .describe('Type of content being analyzed'),
       }),
@@ -42,29 +47,48 @@ For each item, provide:
           const result = await llm.generateObject({
             prompt,
             schema: z.object({
-              links: z.array(z.object({
-                url: z.string(),
-                type: z.enum(['link', 'script', 'stylesheet', 'image', 'api', 'form', 'websocket', 'other']),
-                method: z.string().optional(),
-                parameters: z.array(z.string()).optional(),
-                isInternal: z.boolean(),
-                source: z.string().describe('Where this was found'),
-              })),
-              forms: z.array(z.object({
-                action: z.string(),
-                method: z.string(),
-                fields: z.array(z.object({
-                  name: z.string(),
-                  type: z.string(),
-                  required: z.boolean().optional(),
-                })),
-              })),
-              apiPatterns: z.array(z.object({
-                pattern: z.string(),
-                description: z.string(),
-                exampleEndpoint: z.string().optional(),
-              })),
-              technologies: z.array(z.string()).describe('Detected technologies/frameworks'),
+              links: z.array(
+                z.object({
+                  url: z.string(),
+                  type: z.enum([
+                    'link',
+                    'script',
+                    'stylesheet',
+                    'image',
+                    'api',
+                    'form',
+                    'websocket',
+                    'other',
+                  ]),
+                  method: z.string().optional(),
+                  parameters: z.array(z.string()).optional(),
+                  isInternal: z.boolean(),
+                  source: z.string().describe('Where this was found'),
+                }),
+              ),
+              forms: z.array(
+                z.object({
+                  action: z.string(),
+                  method: z.string(),
+                  fields: z.array(
+                    z.object({
+                      name: z.string(),
+                      type: z.string(),
+                      required: z.boolean().optional(),
+                    }),
+                  ),
+                }),
+              ),
+              apiPatterns: z.array(
+                z.object({
+                  pattern: z.string(),
+                  description: z.string(),
+                  exampleEndpoint: z.string().optional(),
+                }),
+              ),
+              technologies: z
+                .array(z.string())
+                .describe('Detected technologies/frameworks'),
             }),
           })
 
@@ -76,9 +100,11 @@ For each item, provide:
             technologies: result.object.technologies,
             stats: {
               totalLinks: result.object.links.length,
-              internalLinks: result.object.links.filter(l => l.isInternal).length,
+              internalLinks: result.object.links.filter((l) => l.isInternal)
+                .length,
               forms: result.object.forms.length,
-              apiEndpoints: result.object.links.filter(l => l.type === 'api').length,
+              apiEndpoints: result.object.links.filter((l) => l.type === 'api')
+                .length,
             },
           }
         } catch (error) {

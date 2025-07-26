@@ -1,15 +1,15 @@
+import { writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import type { AnalysisResult } from './core/types.js'
+import { createHttpClient } from './infrastructure/http/client.js'
+import { generateHTMLReport } from './infrastructure/storage/html-generator.js'
 import type { LLMProviderType } from './llm/types.js'
 import { createConsoleReporter } from './reporters/console-reporter.js'
 import { createJsonReporter } from './reporters/json-reporter.js'
 import { createMarkdownReporter } from './reporters/markdown-reporter.js'
-import { createWebVulnerabilityScanner } from './scanners/web-scanner.js'
-import { createHttpClient } from './infrastructure/http/client.js'
 import { createVulnerabilityLLMProvider } from './scanners/vulnerabilities/llm-adapter.js'
+import { createWebVulnerabilityScanner } from './scanners/web-scanner.js'
 import { createLogger } from './utils/logger.js'
-import { generateHTMLReport } from './infrastructure/storage/html-generator.js'
-import { writeFileSync } from 'node:fs'
-import { join } from 'node:path'
 
 interface Reporters {
   consoleReporter: ReturnType<typeof createConsoleReporter>
@@ -32,17 +32,25 @@ export interface VulnAgentOptions {
 export const createVulnAgent = (options: VulnAgentOptions = {}) => {
   // Default to web mode
   const mode = options.mode || 'web'
-  
+
   // Common reporters
   const consoleReporter = createConsoleReporter()
   const jsonReporter = createJsonReporter()
   const markdownReporter = createMarkdownReporter()
-  
+
   // Mode-specific setup
   if (mode === 'web') {
-    return createWebAgent(options, { consoleReporter, jsonReporter, markdownReporter })
+    return createWebAgent(options, {
+      consoleReporter,
+      jsonReporter,
+      markdownReporter,
+    })
   } else {
-    return createCodeAgent(options, { consoleReporter, jsonReporter, markdownReporter })
+    return createCodeAgent(options, {
+      consoleReporter,
+      jsonReporter,
+      markdownReporter,
+    })
   }
 }
 
@@ -52,9 +60,9 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
     rateLimit: { maxRequests: 60, windowMs: 60000 },
     timeout: 10000,
     retries: 3,
-    whitelist: options.whitelist || []
+    whitelist: options.whitelist || [],
   })
-  
+
   // Setup LLM if configured
   let vulnLLMProvider = null
   if (options.llm) {
@@ -65,27 +73,34 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
       if (provider.startsWith('gemini')) return 'GOOGLE_API_KEY'
       return `${provider.toUpperCase().replace('-', '_')}_API_KEY`
     }
-    
-    const apiKey = options.llm.apiKey || 
-      process.env[getApiKeyEnvName(options.llm.provider)] || ''
-    
+
+    const apiKey =
+      options.llm.apiKey ||
+      process.env[getApiKeyEnvName(options.llm.provider)] ||
+      ''
+
     if (apiKey) {
       logger.info(`Using LLM provider: ${options.llm.provider}`)
-      vulnLLMProvider = createVulnerabilityLLMProvider(options.llm.provider, apiKey)
+      vulnLLMProvider = createVulnerabilityLLMProvider(
+        options.llm.provider,
+        apiKey,
+      )
     } else {
-      logger.warn(`No API key found for ${options.llm.provider}. Set ${getApiKeyEnvName(options.llm.provider)} environment variable.`)
+      logger.warn(
+        `No API key found for ${options.llm.provider}. Set ${getApiKeyEnvName(options.llm.provider)} environment variable.`,
+      )
     }
   }
-  
+
   const scanner = createWebVulnerabilityScanner({
     httpClient,
-    llm: vulnLLMProvider ? { provider: vulnLLMProvider } : undefined
+    llm: vulnLLMProvider ? { provider: vulnLLMProvider } : undefined,
   })
-  
+
   return {
     analyze: async (targetUrl: string) => {
       const result = await scanner.scan(targetUrl)
-      
+
       // Output results
       if (options.format === 'json') {
         console.log(reporters.jsonReporter.generate(result))
@@ -94,15 +109,20 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
       } else {
         console.log(reporters.consoleReporter.generate(result))
       }
-      
+
       // Generate HTML report if vulnerabilities found
       if (result.vulnerabilities.length > 0 && vulnLLMProvider) {
         const agentResult = {
           sessionId: `scan-${Date.now()}`,
           targetUrl,
-          findings: result.vulnerabilities.map(v => ({
+          findings: result.vulnerabilities.map((v) => ({
             id: v.id,
-            type: v.type as any,
+            type: v.type as
+              | 'XSS'
+              | 'SQLi'
+              | 'Authentication'
+              | 'Configuration'
+              | 'Other',
             severity: v.severity,
             url: v.file,
             description: v.message,
@@ -112,36 +132,38 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
             evidence: {
               request: { url: v.file, method: 'GET' },
               response: { status: 200, headers: {}, body: '' },
-              payload: v.code
-            }
+              payload: v.code,
+            },
           })),
           stepsExecuted: result.scannedFiles,
-          duration: result.duration
+          duration: result.duration,
         }
-        
+
         const htmlReport = generateHTMLReport(agentResult)
         const reportPath = join(process.cwd(), `vuln-report-${Date.now()}.html`)
         writeFileSync(reportPath, htmlReport)
         logger.info(`HTML report saved to: ${reportPath}`)
       }
-      
+
       return result
-    }
+    },
   }
 }
 
 const createCodeAgent = (_options: VulnAgentOptions, _reporters: Reporters) => {
   const logger = createLogger('agent')
-  
+
   const analyze = async (_target: string): Promise<AnalysisResult> => {
-    logger.error('Code analysis mode is temporarily disabled during LLM-native transformation')
+    logger.error(
+      'Code analysis mode is temporarily disabled during LLM-native transformation',
+    )
     logger.info('Please use web mode (-m web) for vulnerability scanning')
-    
+
     // Return empty result
     return {
       vulnerabilities: [],
       scannedFiles: 0,
-      duration: 0
+      duration: 0,
     }
   }
 

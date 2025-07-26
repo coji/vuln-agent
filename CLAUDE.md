@@ -36,6 +36,7 @@ The CLI supports verbose and debug output modes:
 - **Debug mode** (`-d, --debug`): Shows all internal debug logs
 
 Examples:
+
 ```bash
 # Normal run (minimal output)
 node dist/src/cli/index.js scan https://example.com
@@ -51,6 +52,7 @@ DEBUG=vuln-agent:xss,vuln-agent:sqli node dist/src/cli/index.js scan https://exa
 ```
 
 Available debug namespaces:
+
 - `vuln-agent:cli` - CLI operations
 - `vuln-agent:scanner` - Scanner operations
 - `vuln-agent:http` - HTTP client operations
@@ -131,7 +133,7 @@ VulnAgentは**完全にLLMネイティブ**なセキュリティツールとし�
 // ❌ 従来のルールベース実装
 const detectXSS = (input: string) => {
   const xssPatterns = [/<script>/i, /javascript:/i, /onerror=/i]
-  return xssPatterns.some(pattern => pattern.test(input))
+  return xssPatterns.some((pattern) => pattern.test(input))
 }
 
 // ✅ LLMネイティブな実装
@@ -146,12 +148,12 @@ const detectVulnerability = tool({
     context: z.object({
       previousFindings: z.array(z.string()),
       targetInfo: z.any(),
-    })
+    }),
   }),
   execute: async ({ response, context }) => {
     // LLMが全ての分析を実行
     return await llm.analyze(response, context)
-  }
+  },
 })
 ```
 
@@ -190,12 +192,12 @@ export const createXSSDetector = (llm: LLMProvider) => {
       const analysis = await llm.generateObject({
         prompt: `Analyze this web application context for XSS vulnerabilities...`,
         schema: vulnerabilityAnalysisSchema,
-        context: context
+        context: context,
       })
-      
+
       // LLMの判断に完全に従う
       return analysis
-    }
+    },
   }
 }
 ```
@@ -207,29 +209,32 @@ To avoid common lint errors, follow these guidelines:
 ### Type Safety
 
 - **Never use `any` type** - Use `unknown` or specific types instead
+
   ```typescript
   // ❌ Don't use any
   const data: any = fetchData()
-  
+
   // ✅ Use unknown or specific types
   const data: unknown = fetchData()
   const userData: UserData = fetchData()
   ```
 
 - **Always initialize variables with types**
+
   ```typescript
   // ❌ Don't leave uninitialized without type
-  let response  // implicitly any
-  
+  let response // implicitly any
+
   // ✅ Specify type or initialize
   let response: HttpResponse
   ```
 
 - **Use proper type assertions carefully**
+
   ```typescript
   // ❌ Avoid type assertions when possible
   const server = result as Server
-  
+
   // ✅ Use type guards or proper typing
   if (isServer(result)) {
     const server = result
@@ -239,28 +244,31 @@ To avoid common lint errors, follow these guidelines:
 ### Code Style
 
 - **Use dot notation instead of bracket notation for known properties**
+
   ```typescript
   // ❌ Don't use bracket notation for known properties
   headers['Cookie'] = value
-  
+
   // ✅ Use dot notation
   headers.Cookie = value
   ```
 
 - **Use template literals instead of string concatenation**
+
   ```typescript
   // ❌ Don't concatenate strings
   console.log('Result: ' + value + '...')
-  
+
   // ✅ Use template literals
   console.log(`Result: ${value}...`)
   ```
 
 - **Avoid non-null assertions, use optional chaining**
+
   ```typescript
   // ❌ Don't use non-null assertion
   server!.close()
-  
+
   // ✅ Use optional chaining
   server?.close()
   ```
@@ -268,12 +276,13 @@ To avoid common lint errors, follow these guidelines:
 ### Error Handling
 
 - **Use proper error type checking**
+
   ```typescript
   // ❌ Don't use any for catch blocks
   } catch (error: any) {
     if (error.name === 'AbortError') { ... }
   }
-  
+
   // ✅ Use type guards
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') { ... }
@@ -283,12 +292,13 @@ To avoid common lint errors, follow these guidelines:
 ### Function Parameters
 
 - **Use `unknown[]` instead of `any[]` for spread parameters**
+
   ```typescript
   // ❌ Don't use any[]
-  function log(message: string, ...args: any[]) { }
-  
+  function log(message: string, ...args: any[]) {}
+
   // ✅ Use unknown[]
-  function log(message: string, ...args: unknown[]) { }
+  function log(message: string, ...args: unknown[]) {}
   ```
 
 ### Before Committing

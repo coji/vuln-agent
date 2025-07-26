@@ -1,7 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import type { VulnAgentTool } from './types.js'
 import type { LLMProvider } from '../scanners/vulnerabilities/llm-tester.js'
+import type { VulnAgentTool } from './types.js'
 
 export const createTestPayloadTool = (llm: LLMProvider): VulnAgentTool => {
   return {
@@ -9,30 +9,60 @@ export const createTestPayloadTool = (llm: LLMProvider): VulnAgentTool => {
     tool: tool({
       description: 'Generate and analyze vulnerability test payloads using LLM',
       parameters: z.object({
-        vulnerabilityType: z.enum(['XSS', 'SQLi', 'Command Injection', 'Path Traversal', 'XXE', 'SSTI'])
+        vulnerabilityType: z
+          .enum([
+            'XSS',
+            'SQLi',
+            'Command Injection',
+            'Path Traversal',
+            'XXE',
+            'SSTI',
+          ])
           .describe('Type of vulnerability to test for'),
-        context: z.object({
-          url: z.string(),
-          parameter: z.string(),
-          parameterLocation: z.enum(['query', 'body', 'header', 'cookie', 'path']),
-          method: z.string(),
-          previousAttempts: z.array(z.object({
-            payload: z.string(),
-            result: z.enum(['blocked', 'reflected', 'error', 'no_change', 'success']),
-            response: z.string().optional(),
-          })).optional(),
-          technologies: z.array(z.string()).optional(),
-        }).describe('Context for payload generation'),
-        baselineResponse: z.object({
-          status: z.number(),
-          headers: z.record(z.string()),
-          body: z.string(),
-        }).describe('Normal response without payload'),
-        testResponse: z.object({
-          status: z.number(),
-          headers: z.record(z.string()),
-          body: z.string(),
-        }).describe('Response after payload injection'),
+        context: z
+          .object({
+            url: z.string(),
+            parameter: z.string(),
+            parameterLocation: z.enum([
+              'query',
+              'body',
+              'header',
+              'cookie',
+              'path',
+            ]),
+            method: z.string(),
+            previousAttempts: z
+              .array(
+                z.object({
+                  payload: z.string(),
+                  result: z.enum([
+                    'blocked',
+                    'reflected',
+                    'error',
+                    'no_change',
+                    'success',
+                  ]),
+                  response: z.string().optional(),
+                }),
+              )
+              .optional(),
+            technologies: z.array(z.string()).optional(),
+          })
+          .describe('Context for payload generation'),
+        baselineResponse: z
+          .object({
+            status: z.number(),
+            headers: z.record(z.string()),
+            body: z.string(),
+          })
+          .describe('Normal response without payload'),
+        testResponse: z
+          .object({
+            status: z.number(),
+            headers: z.record(z.string()),
+            body: z.string(),
+          })
+          .describe('Response after payload injection'),
       }),
       execute: async (params) => {
         try {
@@ -45,16 +75,23 @@ Location: ${params.context.parameterLocation}
 Method: ${params.context.method}
 Technologies: ${params.context.technologies?.join(', ') || 'Unknown'}
 
-${params.context.previousAttempts && params.context.previousAttempts.length > 0 ? `
+${
+  params.context.previousAttempts && params.context.previousAttempts.length > 0
+    ? `
 Previous attempts:
-${params.context.previousAttempts.map((a, i) => 
-  `${i + 1}. Payload: ${a.payload}
+${params.context.previousAttempts
+  .map(
+    (a, i) =>
+      `${i + 1}. Payload: ${a.payload}
    Result: ${a.result}
-   ${a.response ? `Response snippet: ${a.response.substring(0, 200)}` : ''}`
-).join('\n\n')}
+   ${a.response ? `Response snippet: ${a.response.substring(0, 200)}` : ''}`,
+  )
+  .join('\n\n')}
 
 Learn from previous attempts and try a different approach.
-` : ''}
+`
+    : ''
+}
 
 Generate a payload that:
 1. Is appropriate for ${params.context.parameterLocation} injection
@@ -100,12 +137,20 @@ Analyze:
             schema: z.object({
               isVulnerable: z.boolean(),
               confidence: z.number().min(0).max(1),
-              evidence: z.array(z.object({
-                type: z.string(),
-                description: z.string(),
-                location: z.string(),
-              })),
-              result: z.enum(['success', 'blocked', 'filtered', 'partial', 'inconclusive']),
+              evidence: z.array(
+                z.object({
+                  type: z.string(),
+                  description: z.string(),
+                  location: z.string(),
+                }),
+              ),
+              result: z.enum([
+                'success',
+                'blocked',
+                'filtered',
+                'partial',
+                'inconclusive',
+              ]),
               nextSteps: z.array(z.string()),
               remediation: z.string().optional(),
             }),
@@ -115,16 +160,17 @@ Analyze:
             success: true,
             payload: payloadResult.object,
             analysis: analysisResult.object,
-            recommendation: analysisResult.object.isVulnerable 
+            recommendation: analysisResult.object.isVulnerable
               ? 'Vulnerability confirmed - report finding'
               : analysisResult.object.result === 'inconclusive'
-              ? 'Try additional payloads for confirmation'
-              : 'Continue testing other parameters',
+                ? 'Try additional payloads for confirmation'
+                : 'Continue testing other parameters',
           }
         } catch (error) {
           return {
             success: false,
-            error: error instanceof Error ? error.message : 'Payload test failed',
+            error:
+              error instanceof Error ? error.message : 'Payload test failed',
           }
         }
       },

@@ -1,62 +1,39 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { createMockLLMProvider } from '../../test/fixtures/mock-llm-provider.js'
+import type { HttpClient } from './web-scanner.js'
 import { createWebVulnerabilityScanner } from './web-scanner.js'
-import type { HttpClient, HttpResponse } from './web-scanner.js'
 
 describe('WebVulnerabilityScanner', () => {
-  it('should detect missing security headers', async () => {
-    // Mock HTTP client
-    const mockResponse: HttpResponse = {
-      status: 200,
-      headers: {
-        'content-type': 'text/html'
-        // Missing security headers
-      },
-      body: '<html><body>Test</body></html>',
-      url: 'https://example.com'
-    }
-    
+  it('should run AI agent scan when LLM is configured', async () => {
     const mockHttpClient: HttpClient = {
-      request: vi.fn().mockResolvedValue(mockResponse)
+      request: vi.fn(),
     }
-    
+
     const scanner = createWebVulnerabilityScanner({
-      httpClient: mockHttpClient
+      httpClient: mockHttpClient,
+      llm: { provider: createMockLLMProvider() },
     })
-    
+
     const result = await scanner.scan('https://example.com')
-    
-    expect(mockHttpClient.request).toHaveBeenCalledWith({
-      url: 'https://example.com',
-      method: 'GET'
-    })
-    
-    expect(result.vulnerabilities).toHaveLength(2)
-    expect(result.vulnerabilities[0].message).toBe('Missing X-Frame-Options header')
-    expect(result.vulnerabilities[1].message).toBe('Missing Content-Security-Policy header')
+
+    // Should have run the AI agent
+    expect(result.metadata?.agentSteps).toBeDefined()
+    expect(result.metadata?.agentSteps).toBeGreaterThan(0)
+    expect(result.vulnerabilities.length).toBeGreaterThan(0)
   })
-  
-  it('should not report vulnerabilities when security headers are present', async () => {
-    const mockResponse: HttpResponse = {
-      status: 200,
-      headers: {
-        'content-type': 'text/html',
-        'x-frame-options': 'DENY',
-        'content-security-policy': "default-src 'self'"
-      },
-      body: '<html><body>Test</body></html>',
-      url: 'https://example.com'
-    }
-    
+
+  it('should return empty results when no LLM provider is configured', async () => {
     const mockHttpClient: HttpClient = {
-      request: vi.fn().mockResolvedValue(mockResponse)
+      request: vi.fn(),
     }
-    
+
     const scanner = createWebVulnerabilityScanner({
-      httpClient: mockHttpClient
+      httpClient: mockHttpClient,
     })
-    
+
     const result = await scanner.scan('https://example.com')
-    
+
     expect(result.vulnerabilities).toHaveLength(0)
+    expect(result.metadata?.error).toBe('No LLM provider configured')
   })
 })
