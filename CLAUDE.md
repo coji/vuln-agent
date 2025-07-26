@@ -24,6 +24,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Run tests**: `pnpm test`
 - **Run tests in watch mode**: `pnpm test -- --watch`
 - **Run a single test file**: `pnpm test <file-path>`
+- **Run integration tests**: `pnpm test:integration`
+
+## CLI Usage
+
+### Debugging
+
+The CLI supports verbose and debug output modes:
+
+- **Verbose mode** (`-v, --verbose`): Shows scanner and vulnerability detection logs
+- **Debug mode** (`-d, --debug`): Shows all internal debug logs
+
+Examples:
+```bash
+# Normal run (minimal output)
+node dist/src/cli/index.js scan https://example.com
+
+# Verbose mode (shows what the scanner is doing)
+node dist/src/cli/index.js scan https://example.com --verbose
+
+# Debug mode (shows all internal operations)
+node dist/src/cli/index.js scan https://example.com --debug
+
+# Debug specific modules using DEBUG environment variable
+DEBUG=vuln-agent:xss,vuln-agent:sqli node dist/src/cli/index.js scan https://example.com
+```
+
+Available debug namespaces:
+- `vuln-agent:cli` - CLI operations
+- `vuln-agent:scanner` - Scanner operations
+- `vuln-agent:http` - HTTP client operations
+- `vuln-agent:llm` - LLM operations
+- `vuln-agent:vulnerability` - General vulnerability detection
+- `vuln-agent:xss` - XSS detection details
+- `vuln-agent:sqli` - SQL injection detection details
 
 ## Project Structure
 

@@ -24,7 +24,7 @@ describe('HttpClient', () => {
       url: 'https://example.com'
     }
     
-    vi.mocked(global.fetch).mockResolvedValue(mockResponse as any)
+    vi.mocked(global.fetch).mockResolvedValue(mockResponse as unknown as Response)
     
     const client = createHttpClient({
       rateLimit: { maxRequests: 10, windowMs: 1000 },
@@ -78,7 +78,7 @@ describe('HttpClient', () => {
       url: 'http://localhost:5173'
     }
     
-    vi.mocked(global.fetch).mockResolvedValue(mockResponse as any)
+    vi.mocked(global.fetch).mockResolvedValue(mockResponse as unknown as Response)
     
     const client = createHttpClient({
       rateLimit: { maxRequests: 10, windowMs: 1000 },
@@ -105,7 +105,7 @@ describe('HttpClient', () => {
       url: 'https://sub.example.com'
     }
     
-    vi.mocked(global.fetch).mockResolvedValue(mockResponse as any)
+    vi.mocked(global.fetch).mockResolvedValue(mockResponse as unknown as Response)
     
     const client = createHttpClient({
       rateLimit: { maxRequests: 10, windowMs: 1000 },

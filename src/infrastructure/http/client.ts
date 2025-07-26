@@ -78,7 +78,7 @@ const retryWithBackoff = async <T>(
       return await fn()
     } catch (error) {
       if (i === maxRetries - 1) throw error
-      await delay(Math.pow(2, i) * 1000) // Exponential backoff
+      await delay(2 ** i * 1000) // Exponential backoff
     }
   }
   throw new Error('Retry failed')
@@ -127,9 +127,9 @@ export const createHttpClient = (config: HttpClientConfig): HttpClient => {
           body: responseBody,
           url: response.url
         }
-      } catch (error: any) {
+      } catch (error) {
         clearTimeout(timeoutId)
-        if (error.name === 'AbortError') {
+        if (error instanceof Error && error.name === 'AbortError') {
           throw new Error(`Request timeout after ${config.timeout}ms`)
         }
         throw error

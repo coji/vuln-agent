@@ -1,10 +1,14 @@
 import type { AnalysisResult } from '../core/types.js'
+import { createXSSDetector } from './vulnerabilities/xss-detector.js'
+import { createSQLiDetector } from './vulnerabilities/sqli-detector.js'
+import { createLLMVulnerabilityTester } from './vulnerabilities/llm-tester.js'
+import type { LLMProvider } from './vulnerabilities/llm-tester.js'
+import { createLogger, output } from '../utils/logger.js'
 
 export interface WebScannerOptions {
   httpClient: HttpClient
   llm?: {
-    provider: string
-    apiKey?: string
+    provider: LLMProvider
   }
 }
 
@@ -41,51 +45,157 @@ export interface WebVulnerability {
   recommendation: string
 }
 
+// Helper function to check security headers
+const checkSecurityHeaders = (response: HttpResponse, url: string): WebVulnerability[] => {
+  const vulnerabilities: WebVulnerability[] = []
+  
+  if (!response.headers['x-frame-options']) {
+    vulnerabilities.push({
+      type: 'Configuration',
+      severity: 'medium',
+      url,
+      method: 'GET',
+      evidence: {
+        request: { url, method: 'GET' },
+        response
+      },
+      description: 'Missing X-Frame-Options header',
+      recommendation: 'Add X-Frame-Options header to prevent clickjacking attacks'
+    })
+  }
+  
+  if (!response.headers['content-security-policy']) {
+    vulnerabilities.push({
+      type: 'Configuration',
+      severity: 'medium',
+      url,
+      method: 'GET',
+      evidence: {
+        request: { url, method: 'GET' },
+        response
+      },
+      description: 'Missing Content-Security-Policy header',
+      recommendation: 'Implement Content Security Policy to prevent XSS attacks'
+    })
+  }
+  
+  return vulnerabilities
+}
+
 export const createWebVulnerabilityScanner = (options: WebScannerOptions) => {
-  const { httpClient } = options
+  const { httpClient, llm } = options
+  const logger = createLogger('scanner')
+  
+  // Initialize vulnerability detectors if LLM is available
+  const llmTester = llm ? createLLMVulnerabilityTester(llm.provider) : null
+  const xssDetector = llm && llmTester ? createXSSDetector({ httpClient, llmTester }) : null
+  const sqliDetector = llm && llmTester ? createSQLiDetector({ httpClient, llmTester }) : null
+  
+  logger.debug('LLM-based vulnerability testing: %s', llm ? 'ENABLED' : 'DISABLED')
   
   const scan = async (targetUrl: string): Promise<AnalysisResult> => {
     const startTime = Date.now()
+    const vulnerabilities: WebVulnerability[] = []
     
-    // For now, just do a basic HTTP request
+    // First, get baseline response
+    let baselineResponse: HttpResponse
     try {
-      const response = await httpClient.request({
+      baselineResponse = await httpClient.request({
         url: targetUrl,
         method: 'GET'
       })
       
       // Basic security header check
-      const vulnerabilities: WebVulnerability[] = []
+      const headerVulns = checkSecurityHeaders(baselineResponse, targetUrl);
+      vulnerabilities.push(...headerVulns)
       
-      // Check for missing security headers
-      if (!response.headers['x-frame-options']) {
-        vulnerabilities.push({
-          type: 'Configuration',
-          severity: 'medium',
-          url: targetUrl,
-          method: 'GET',
-          evidence: {
-            request: { url: targetUrl, method: 'GET' },
-            response
-          },
-          description: 'Missing X-Frame-Options header',
-          recommendation: 'Add X-Frame-Options header to prevent clickjacking attacks'
-        })
-      }
-      
-      if (!response.headers['content-security-policy']) {
-        vulnerabilities.push({
-          type: 'Configuration',
-          severity: 'medium',
-          url: targetUrl,
-          method: 'GET',
-          evidence: {
-            request: { url: targetUrl, method: 'GET' },
-            response
-          },
-          description: 'Missing Content-Security-Policy header',
-          recommendation: 'Implement Content Security Policy to prevent XSS attacks'
-        })
+      // If LLM is available, test for XSS in common parameters
+      if (xssDetector) {
+        output.scanning('Testing for XSS vulnerabilities...')
+        
+        // Parse URL for query parameters
+        const urlObj = new URL(targetUrl)
+        const queryParams = Array.from(urlObj.searchParams.keys())
+        
+        // Test each query parameter for XSS
+        for (const param of queryParams) {
+          logger.debug('Testing parameter for XSS: %s', param)
+          
+          const xssResult = await xssDetector.detectXSS({
+            url: targetUrl,
+            parameter: param,
+            parameterLocation: 'query',
+            method: 'GET',
+            baselineResponse: {
+              status: baselineResponse.status,
+              headers: baselineResponse.headers,
+              body: baselineResponse.body
+            }
+          })
+          
+          if (xssResult.vulnerable && xssResult.analysis) {
+            vulnerabilities.push({
+              type: 'XSS',
+              severity: xssResult.analysis.severity,
+              url: targetUrl,
+              method: 'GET',
+              parameter: param,
+              evidence: {
+                request: { 
+                  url: targetUrl, 
+                  method: 'GET'
+                },
+                response: baselineResponse,
+                payload: xssResult.attempts[xssResult.attempts.length - 1]?.payload
+              },
+              description: `XSS vulnerability in parameter '${param}': ${xssResult.analysis.evidence[0]?.description || 'Payload reflected without encoding'}`,
+              recommendation: xssResult.analysis.remediation
+            })
+          }
+        }
+        
+        // Test for SQL injection
+        if (sqliDetector) {
+          output.scanning('Testing for SQL injection vulnerabilities...')
+          
+          for (const param of queryParams) {
+            logger.debug('Testing parameter for SQLi: %s', param)
+            
+            const sqliResult = await sqliDetector.detectSQLi({
+              url: targetUrl,
+              parameter: param,
+              parameterLocation: 'query',
+              method: 'GET',
+              baselineResponse: {
+                status: baselineResponse.status,
+                headers: baselineResponse.headers,
+                body: baselineResponse.body
+              }
+            })
+            
+            if (sqliResult.vulnerable && sqliResult.analysis) {
+              vulnerabilities.push({
+                type: 'SQLi',
+                severity: sqliResult.analysis.severity,
+                url: targetUrl,
+                method: 'GET',
+                parameter: param,
+                evidence: {
+                  request: { 
+                    url: targetUrl, 
+                    method: 'GET'
+                  },
+                  response: baselineResponse,
+                  payload: sqliResult.attempts[sqliResult.attempts.length - 1]?.payload
+                },
+                description: `SQL injection vulnerability in parameter '${param}': ${sqliResult.analysis.evidence[0]?.description || 'SQL syntax error or data exposure detected'}`,
+                recommendation: sqliResult.analysis.remediation
+              })
+            }
+          }
+        }
+        
+        // TODO: Test common POST parameters, headers, cookies
       }
       
       // Convert to standard AnalysisResult format

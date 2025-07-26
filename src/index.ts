@@ -9,6 +9,14 @@ import { createJsonReporter } from './reporters/json-reporter.js'
 import { createMarkdownReporter } from './reporters/markdown-reporter.js'
 import { createWebVulnerabilityScanner } from './scanners/web-scanner.js'
 import { createHttpClient } from './infrastructure/http/client.js'
+import { createVulnerabilityLLMProvider } from './scanners/vulnerabilities/llm-adapter.js'
+import { createLogger } from './utils/logger.js'
+
+interface Reporters {
+  consoleReporter: ReturnType<typeof createConsoleReporter>
+  jsonReporter: ReturnType<typeof createJsonReporter>
+  markdownReporter: ReturnType<typeof createMarkdownReporter>
+}
 
 export interface VulnAgentOptions {
   mode?: 'code' | 'web'
@@ -39,7 +47,8 @@ export const createVulnAgent = (options: VulnAgentOptions = {}) => {
   }
 }
 
-const createWebAgent = (options: VulnAgentOptions, reporters: any) => {
+const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
+  const logger = createLogger('agent')
   const httpClient = createHttpClient({
     rateLimit: { maxRequests: 60, windowMs: 60000 },
     timeout: 10000,
@@ -47,9 +56,31 @@ const createWebAgent = (options: VulnAgentOptions, reporters: any) => {
     whitelist: options.whitelist || []
   })
   
+  // Setup LLM if configured
+  let vulnLLMProvider = null
+  if (options.llm) {
+    // Map provider type to API key environment variable
+    const getApiKeyEnvName = (provider: string) => {
+      if (provider.startsWith('openai')) return 'OPENAI_API_KEY'
+      if (provider.startsWith('anthropic')) return 'ANTHROPIC_API_KEY'
+      if (provider.startsWith('gemini')) return 'GOOGLE_API_KEY'
+      return `${provider.toUpperCase().replace('-', '_')}_API_KEY`
+    }
+    
+    const apiKey = options.llm.apiKey || 
+      process.env[getApiKeyEnvName(options.llm.provider)] || ''
+    
+    if (apiKey) {
+      logger.info(`Using LLM provider: ${options.llm.provider}`)
+      vulnLLMProvider = createVulnerabilityLLMProvider(options.llm.provider, apiKey)
+    } else {
+      logger.warn(`No API key found for ${options.llm.provider}. Set ${getApiKeyEnvName(options.llm.provider)} environment variable.`)
+    }
+  }
+  
   const scanner = createWebVulnerabilityScanner({
     httpClient,
-    llm: options.llm
+    llm: vulnLLMProvider ? { provider: vulnLLMProvider } : undefined
   })
   
   return {
@@ -70,7 +101,7 @@ const createWebAgent = (options: VulnAgentOptions, reporters: any) => {
   }
 }
 
-const createCodeAgent = (options: VulnAgentOptions, reporters: any) => {
+const createCodeAgent = (options: VulnAgentOptions, reporters: Reporters) => {
   const fileReader = createFileReader()
   const urlReader = createURLReader()
 
