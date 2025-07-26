@@ -7,6 +7,9 @@ import { createWebVulnerabilityScanner } from './scanners/web-scanner.js'
 import { createHttpClient } from './infrastructure/http/client.js'
 import { createVulnerabilityLLMProvider } from './scanners/vulnerabilities/llm-adapter.js'
 import { createLogger } from './utils/logger.js'
+import { generateHTMLReport } from './infrastructure/storage/html-generator.js'
+import { writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 interface Reporters {
   consoleReporter: ReturnType<typeof createConsoleReporter>
@@ -90,6 +93,36 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
         console.log(reporters.markdownReporter.generate(result))
       } else {
         console.log(reporters.consoleReporter.generate(result))
+      }
+      
+      // Generate HTML report if vulnerabilities found
+      if (result.vulnerabilities.length > 0 && vulnLLMProvider) {
+        const agentResult = {
+          sessionId: `scan-${Date.now()}`,
+          targetUrl,
+          findings: result.vulnerabilities.map(v => ({
+            id: v.id,
+            type: v.type as any,
+            severity: v.severity,
+            url: v.file,
+            description: v.message,
+            recommendation: 'Please review and fix this vulnerability',
+            confidence: 0.9,
+            timestamp: new Date(),
+            evidence: {
+              request: { url: v.file, method: 'GET' },
+              response: { status: 200, headers: {}, body: '' },
+              payload: v.code
+            }
+          })),
+          stepsExecuted: result.scannedFiles,
+          duration: result.duration
+        }
+        
+        const htmlReport = generateHTMLReport(agentResult)
+        const reportPath = join(process.cwd(), `vuln-report-${Date.now()}.html`)
+        writeFileSync(reportPath, htmlReport)
+        logger.info(`HTML report saved to: ${reportPath}`)
       }
       
       return result
