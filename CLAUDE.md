@@ -106,6 +106,100 @@ const createTaskManager = () => {
   - Example: `.tmp/test-example.js` instead of `test-example.js`
   - The `.tmp/` directory is already in `.gitignore`
 
+## LLM-Native Architecture Principles
+
+VulnAgentは**完全にLLMネイティブ**なセキュリティツールとして設計されています。以下の原則を徹底してください：
+
+### 1. ルールベース実装の完全排除
+
+- **❌ 禁止事項**:
+  - 正規表現による脆弱性パターンマッチング
+  - ハードコードされた脆弱性シグネチャ
+  - 事前定義されたペイロードリスト
+  - 固定的な診断フロー
+  - 静的なルールセット
+
+- **✅ 推奨事項**:
+  - LLMによる動的な脆弱性分析
+  - コンテキストに基づく適応的テスト
+  - LLMが生成する文脈依存のペイロード
+  - AIエージェントによる自律的な診断戦略
+
+### 2. Vercel AI SDK Tools中心の設計
+
+```typescript
+// ❌ 従来のルールベース実装
+const detectXSS = (input: string) => {
+  const xssPatterns = [/<script>/i, /javascript:/i, /onerror=/i]
+  return xssPatterns.some(pattern => pattern.test(input))
+}
+
+// ✅ LLMネイティブな実装
+const detectVulnerability = tool({
+  description: 'Analyze response for security vulnerabilities using LLM',
+  parameters: z.object({
+    response: z.object({
+      status: z.number(),
+      headers: z.record(z.string()),
+      body: z.string(),
+    }),
+    context: z.object({
+      previousFindings: z.array(z.string()),
+      targetInfo: z.any(),
+    })
+  }),
+  execute: async ({ response, context }) => {
+    // LLMが全ての分析を実行
+    return await llm.analyze(response, context)
+  }
+})
+```
+
+### 3. 自律的なAIエージェント
+
+- エージェントは100ステップの中で自律的に:
+  - 診断戦略を決定
+  - 次のアクションを選択
+  - ペイロードを生成
+  - 結果を評価
+  - 戦略を動的に調整
+
+### 4. 実装ガイドライン
+
+1. **脆弱性検出**: すべての検出ロジックをLLMに委譲
+2. **ペイロード生成**: LLMが文脈に応じて動的生成
+3. **結果評価**: LLMによる包括的な分析
+4. **戦略決定**: AIエージェントによる自律的判断
+
+### 5. 既存コードのリファクタリング指針
+
+現在のコードベースには以下のようなルールベース実装が残っています。これらは全て削除またはLLMベースに置き換える必要があります：
+
+- `src/analyzers/pattern-matcher.ts` - 正規表現パターンマッチング → 削除
+- `src/rules/default-rules.ts` - 静的ルールセット → 削除
+- `src/scanners/vulnerabilities/` - ハードコードされたペイロード → LLM生成に変更
+
+### 6. 例：XSS検出の実装
+
+```typescript
+// 完全にLLMに依存した実装
+export const createXSSDetector = (llm: LLMProvider) => {
+  return {
+    detect: async (context: TestContext) => {
+      // LLMにコンテキスト全体を渡して分析を依頼
+      const analysis = await llm.generateObject({
+        prompt: `Analyze this web application context for XSS vulnerabilities...`,
+        schema: vulnerabilityAnalysisSchema,
+        context: context
+      })
+      
+      // LLMの判断に完全に従う
+      return analysis
+    }
+  }
+}
+```
+
 ## TypeScript and Linting Guidelines
 
 To avoid common lint errors, follow these guidelines:
