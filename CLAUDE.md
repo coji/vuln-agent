@@ -105,3 +105,99 @@ const createTaskManager = () => {
 - **Temporary files** - Always create temporary test files in the `.tmp/` directory, never in the project root
   - Example: `.tmp/test-example.js` instead of `test-example.js`
   - The `.tmp/` directory is already in `.gitignore`
+
+## TypeScript and Linting Guidelines
+
+To avoid common lint errors, follow these guidelines:
+
+### Type Safety
+
+- **Never use `any` type** - Use `unknown` or specific types instead
+  ```typescript
+  // ❌ Don't use any
+  const data: any = fetchData()
+  
+  // ✅ Use unknown or specific types
+  const data: unknown = fetchData()
+  const userData: UserData = fetchData()
+  ```
+
+- **Always initialize variables with types**
+  ```typescript
+  // ❌ Don't leave uninitialized without type
+  let response  // implicitly any
+  
+  // ✅ Specify type or initialize
+  let response: HttpResponse
+  ```
+
+- **Use proper type assertions carefully**
+  ```typescript
+  // ❌ Avoid type assertions when possible
+  const server = result as Server
+  
+  // ✅ Use type guards or proper typing
+  if (isServer(result)) {
+    const server = result
+  }
+  ```
+
+### Code Style
+
+- **Use dot notation instead of bracket notation for known properties**
+  ```typescript
+  // ❌ Don't use bracket notation for known properties
+  headers['Cookie'] = value
+  
+  // ✅ Use dot notation
+  headers.Cookie = value
+  ```
+
+- **Use template literals instead of string concatenation**
+  ```typescript
+  // ❌ Don't concatenate strings
+  console.log('Result: ' + value + '...')
+  
+  // ✅ Use template literals
+  console.log(`Result: ${value}...`)
+  ```
+
+- **Avoid non-null assertions, use optional chaining**
+  ```typescript
+  // ❌ Don't use non-null assertion
+  server!.close()
+  
+  // ✅ Use optional chaining
+  server?.close()
+  ```
+
+### Error Handling
+
+- **Use proper error type checking**
+  ```typescript
+  // ❌ Don't use any for catch blocks
+  } catch (error: any) {
+    if (error.name === 'AbortError') { ... }
+  }
+  
+  // ✅ Use type guards
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') { ... }
+  }
+  ```
+
+### Function Parameters
+
+- **Use `unknown[]` instead of `any[]` for spread parameters**
+  ```typescript
+  // ❌ Don't use any[]
+  function log(message: string, ...args: any[]) { }
+  
+  // ✅ Use unknown[]
+  function log(message: string, ...args: unknown[]) { }
+  ```
+
+### Before Committing
+
+- **Always run `pnpm lint` before committing** to catch any style issues
+- **Run `pnpm validate`** to ensure all checks pass (format, lint, typecheck, tests)
