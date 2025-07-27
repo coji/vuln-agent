@@ -1,4 +1,4 @@
-import type { AnalysisResult, Vulnerability } from '../core/types.js'
+import type { AnalysisResult, Vulnerability } from '../types.js'
 
 export const createMarkdownReporter = () => {
   const formatVulnerability = (vuln: Vulnerability, index: number): string => {

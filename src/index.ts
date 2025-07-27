@@ -1,14 +1,13 @@
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type { AnalysisResult } from './core/types.js'
-import { createHttpClient } from './infrastructure/http/client.js'
+import type { AnalysisResult } from './types.js'
 import { generateHTMLReport } from './infrastructure/storage/html-generator.js'
-import { createLLMProvider } from './llm/index.js'
-import type { LLMProviderType } from './llm/types.js'
+import { createLLMProvider } from './llm.js'
+import type { LLMProviderType } from './types.js'
 import { createConsoleReporter } from './reporters/console-reporter.js'
 import { createJsonReporter } from './reporters/json-reporter.js'
 import { createMarkdownReporter } from './reporters/markdown-reporter.js'
-import { createWebVulnerabilityScanner } from './scanners/web-scanner.js'
+import { createWebScanner } from './scanner.js'
 import { createLogger } from './utils/logger.js'
 
 interface Reporters {
@@ -56,12 +55,6 @@ export const createVulnAgent = (options: VulnAgentOptions = {}) => {
 
 const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
   const logger = createLogger('agent')
-  const httpClient = createHttpClient({
-    rateLimit: { maxRequests: 60, windowMs: 60000 },
-    timeout: 10000,
-    retries: 3,
-    whitelist: options.whitelist || [],
-  })
 
   // Setup LLM if configured
   let vulnLLMProvider = null
@@ -92,14 +85,12 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
     }
   }
 
-  const scanner = createWebVulnerabilityScanner({
-    httpClient,
-    llm: vulnLLMProvider ? { provider: vulnLLMProvider } : undefined,
-  })
-
   return {
     analyze: async (targetUrl: string) => {
-      const result = await scanner.scan(targetUrl)
+      const result = await createWebScanner(targetUrl, {
+        whitelist: options.whitelist || [],
+        llm: vulnLLMProvider ? { provider: vulnLLMProvider } : undefined,
+      })
 
       // Output results
       if (options.format === 'json') {

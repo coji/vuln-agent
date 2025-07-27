@@ -1,7 +1,6 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import type { VulnerabilityFinding } from '../domain/models/scan-session.js'
-import type { VulnAgentTool } from './types.js'
+import type { VulnerabilityFinding, VulnAgentTool } from '../types.js'
 
 // In-memory storage for findings (will be replaced with proper storage later)
 const findingsStore = new Map<string, VulnerabilityFinding[]>()

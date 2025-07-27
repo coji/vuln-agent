@@ -6,7 +6,7 @@ import type {
   VulnerabilityAnalysisResult,
   VulnerabilityAttempt,
   VulnerabilityTestContext,
-} from './types.js'
+} from '../../types.js'
 
 export interface SQLiDetectorOptions {
   httpClient: HttpClient

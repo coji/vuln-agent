@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { VulnAgentOptions } from '../index.js'
-import type { LLMProviderType } from '../llm/types.js'
+import type { LLMProviderType } from '../types.js'
 
 export interface ConfigFile {
   llm?: {

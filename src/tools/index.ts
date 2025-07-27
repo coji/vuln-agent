@@ -12,7 +12,7 @@ export {
   getSessionFindings,
 } from './report-finding.js'
 export { createTestPayloadTool } from './test-payload.js'
-export type { ToolContext, VulnAgentTool } from './types.js'
+export type { ToolContext, VulnAgentTool } from '../types.js'
 export {
   clearSessionStrategy,
   createUpdateStrategyTool,

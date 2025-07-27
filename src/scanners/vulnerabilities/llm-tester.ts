@@ -5,7 +5,7 @@ import type {
   VulnerabilityAnalysisResult,
   VulnerabilityTestContext,
   VulnerabilityTestResult,
-} from './types.js'
+} from '../../types.js'
 
 export interface LLMProvider {
   generateObject: <T>(params: {

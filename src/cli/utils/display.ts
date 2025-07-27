@@ -1,4 +1,4 @@
-import type { AnalysisResult } from '../../core/types.js'
+import type { AnalysisResult } from '../../types.js'
 
 export const displayProgress = (message: string) => {
   process.stdout.write(`\r\x1b[K${message}`)

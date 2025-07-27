@@ -2,8 +2,8 @@ import { streamText } from 'ai'
 import type {
   ScanSession,
   VulnerabilityFinding,
-} from '../domain/models/scan-session.js'
-import type { LLMProvider } from '../llm/types.js'
+  LLMProvider,
+} from '../types.js'
 import {
   createAnalyzeResponseTool,
   createExtractLinksTool,

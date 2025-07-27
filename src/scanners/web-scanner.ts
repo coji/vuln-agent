@@ -1,6 +1,5 @@
 import { createVulnAgent } from '../core/agent.js'
-import type { AnalysisResult } from '../core/types.js'
-import type { LLMProvider } from '../llm/types.js'
+import type { AnalysisResult, LLMProvider } from '../types.js'
 import { createLogger } from '../utils/logger.js'
 
 export interface WebScannerOptions {
@@ -126,7 +125,7 @@ export const createWebVulnerabilityScanner = (options: WebScannerOptions) => {
     const result: AnalysisResult = {
       vulnerabilities: agentResult.findings.map((finding) => ({
         id: finding.id,
-        type: finding.type,
+        type: finding.type.toString(),
         severity: finding.severity,
         file: finding.url,
         line: 0,
@@ -135,6 +134,7 @@ export const createWebVulnerabilityScanner = (options: WebScannerOptions) => {
         code: finding.evidence.payload || '',
         rule: `ai-${finding.type.toLowerCase()}`,
       })),
+      findings: agentResult.findings,
       scannedFiles: agentResult.stepsExecuted,
       duration: agentResult.duration,
       summary: {

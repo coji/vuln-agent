@@ -1,5 +1,5 @@
-import { createMockProvider } from '../../src/llm/providers/mock-provider.js'
-import type { LLMProvider } from '../../src/llm/types.js'
+import { createLLM } from '../../src/llm.js'
+import type { LLMProvider } from '../../src/types.js'
 
 export interface MockLLMProviderOptions {
   // Allow customizing responses for specific tests
@@ -21,7 +21,7 @@ export const createMockLLMProvider = (
   const testedEndpoints: string[] = []
 
   // Get base mock provider
-  const baseProvider = createMockProvider()
+  const baseProvider = createLLM({ provider: 'openai-o3', apiKey: '' })
 
   return {
     ...baseProvider,

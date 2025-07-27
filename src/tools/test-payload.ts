@@ -1,7 +1,6 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import type { LLMProvider } from '../llm/types.js'
-import type { VulnAgentTool } from './types.js'
+import type { LLMProvider, VulnAgentTool } from '../types.js'
 
 export const createTestPayloadTool = (llm: LLMProvider): VulnAgentTool => {
   return {

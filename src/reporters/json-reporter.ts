@@ -1,4 +1,4 @@
-import type { AnalysisResult } from '../core/types.js'
+import type { AnalysisResult } from '../types.js'
 
 export const createJsonReporter = () => {
   const generate = (result: AnalysisResult): string => {

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
 import { createVulnAgent, type VulnAgentOptions } from '../../index.js'
-import type { LLMProviderType } from '../../llm/types.js'
+import type { LLMProviderType } from '../../types.js'
 
 export const createScanCommand = () => {
   const cmd = new Command('scan')
