@@ -1,8 +1,4 @@
-import type {
-  HttpClient,
-  HttpResponse,
-  RequestOptions,
-} from './scanners/web-scanner.js'
+import type { HttpClient, HttpResponse, RequestOptions } from './scanner.js'
 
 export interface HttpClientConfig {
   rateLimit: {
