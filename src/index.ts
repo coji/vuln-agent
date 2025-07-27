@@ -19,7 +19,7 @@ const formatReportDate = (date: Date = new Date()): string => {
   const hours = String(date.getHours()).padStart(2, '0')
   const minutes = String(date.getMinutes()).padStart(2, '0')
   const seconds = String(date.getSeconds()).padStart(2, '0')
-  
+
   return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`
 }
 
@@ -180,7 +180,10 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
           }
 
           const htmlReport = generateHTMLReport(agentResult)
-          reportPath = join(process.cwd(), `vuln-report-${formatReportDate()}.html`)
+          reportPath = join(
+            process.cwd(),
+            `vuln-report-${formatReportDate()}.html`,
+          )
           writeFileSync(reportPath, htmlReport)
           logger.info(`HTML report saved to: ${reportPath}`)
         }

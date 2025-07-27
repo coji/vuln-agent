@@ -10,7 +10,18 @@ export type VulnerabilityType =
   | 'XSS'
   | 'SQLi'
   | 'Authentication'
+  | 'Authorization'
+  | 'CSRF'
+  | 'Information Disclosure'
   | 'Configuration'
+  | 'Injection'
+  | 'Path Traversal'
+  | 'XXE'
+  | 'SSRF'
+  | 'Deserialization'
+  | 'File Upload'
+  | 'Business Logic'
+  | 'Race Condition'
   | 'Other'
 
 // ========================================

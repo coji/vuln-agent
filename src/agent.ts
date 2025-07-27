@@ -271,7 +271,7 @@ Remember: Your goal is to FIND and REPORT actual vulnerabilities. Start testing 
       let errorMessage = 'Unknown error'
       if (error instanceof Error) {
         errorMessage = error.message
-        
+
         // Check for common API authentication errors
         if (
           errorMessage.includes('401') ||

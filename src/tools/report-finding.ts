@@ -9,18 +9,49 @@ export const createReportFindingTool = (): VulnAgentTool => {
   return {
     name: 'reportFinding',
     tool: tool({
-      description: 'Report and store a confirmed vulnerability finding',
+      description: `Report and store a confirmed vulnerability finding. Choose the most specific vulnerability type that matches:
+- XSS: Cross-Site Scripting
+- SQLi: SQL Injection
+- Authentication: Authentication bypass, weak authentication
+- Authorization: Access control issues, privilege escalation
+- CSRF: Cross-Site Request Forgery
+- Information Disclosure: Sensitive data exposure, error messages with stack traces
+- Configuration: Security misconfigurations, missing security headers
+- Injection: Command injection, LDAP injection, other injection types (not SQL)
+- Path Traversal: Directory traversal, file inclusion
+- XXE: XML External Entity injection
+- SSRF: Server-Side Request Forgery
+- Deserialization: Insecure deserialization
+- File Upload: Unrestricted file upload vulnerabilities
+- Business Logic: Logic flaws, workflow bypass
+- Race Condition: Time-of-check to time-of-use issues
+- Other: Use only if none of the above categories fit`,
       parameters: z.object({
         sessionId: z.string().describe('Current scan session ID'),
         finding: z
           .object({
-            type: z.enum([
-              'XSS',
-              'SQLi',
-              'Authentication',
-              'Configuration',
-              'Other',
-            ]),
+            type: z
+              .enum([
+                'XSS',
+                'SQLi',
+                'Authentication',
+                'Authorization',
+                'CSRF',
+                'Information Disclosure',
+                'Configuration',
+                'Injection',
+                'Path Traversal',
+                'XXE',
+                'SSRF',
+                'Deserialization',
+                'File Upload',
+                'Business Logic',
+                'Race Condition',
+                'Other',
+              ])
+              .describe(
+                'Vulnerability type - choose the most specific category that matches',
+              ),
             severity: z.enum(['critical', 'high', 'medium', 'low', 'info']),
             url: z.string().describe('URL where vulnerability was found'),
             parameter: z

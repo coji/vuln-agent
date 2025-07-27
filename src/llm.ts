@@ -44,7 +44,6 @@ const createBaseProvider = (
   }
 }
 
-
 /**
  * Creates an LLM provider based on the configuration
  */

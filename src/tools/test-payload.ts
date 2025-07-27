@@ -16,8 +16,18 @@ export const createTestPayloadTool = (llm: LLMProvider): VulnAgentTool => {
             'Path Traversal',
             'XXE',
             'SSTI',
+            'LDAP Injection',
+            'NoSQL Injection',
+            'OS Command Injection',
+            'Code Injection',
+            'CSRF',
+            'SSRF',
+            'File Upload',
+            'Deserialization',
           ])
-          .describe('Type of vulnerability to test for'),
+          .describe(
+            'Type of vulnerability to test for. Choose the most specific type that matches your testing goal.',
+          ),
         context: z
           .object({
             url: z.string().describe('Target URL being tested'),

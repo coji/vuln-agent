@@ -4,7 +4,24 @@ import type { LLMProvider, VulnAgentTool } from '../types.js'
 import { debug } from '../utils.js'
 
 const vulnerabilitySchema = z.object({
-  type: z.enum(['XSS', 'SQLi', 'Authentication', 'Configuration', 'Other']),
+  type: z.enum([
+    'XSS',
+    'SQLi',
+    'Authentication',
+    'Authorization',
+    'CSRF',
+    'Information Disclosure',
+    'Configuration',
+    'Injection',
+    'Path Traversal',
+    'XXE',
+    'SSRF',
+    'Deserialization',
+    'File Upload',
+    'Business Logic',
+    'Race Condition',
+    'Other',
+  ]),
   severity: z.enum(['critical', 'high', 'medium', 'low', 'info']),
   confidence: z.number().min(0).max(1),
   evidence: z.array(
