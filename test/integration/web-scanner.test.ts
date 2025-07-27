@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import type { AgentScanResult } from '../../src/agent.js'
 import { createVulnAgent } from '../../src/agent.js'
 import type { AnalysisResult, SeverityLevel } from '../../src/types.js'
 import { createSimpleMockProvider } from '../fixtures/simple-mock-provider.js'
@@ -6,7 +7,7 @@ import type { VulnerableApp } from '../fixtures/vulnerable-app.js'
 import { createVulnerableApp } from '../fixtures/vulnerable-app.js'
 
 // Helper function to convert agent result to analysis result
-function convertToAnalysisResult(agentResult: any): AnalysisResult {
+function convertToAnalysisResult(agentResult: AgentScanResult): AnalysisResult {
   const severityDistribution: Record<SeverityLevel, number> = {
     critical: 0,
     high: 0,
@@ -15,12 +16,12 @@ function convertToAnalysisResult(agentResult: any): AnalysisResult {
     info: 0,
   }
 
-  agentResult.findings.forEach((finding: any) => {
-    severityDistribution[finding.severity as SeverityLevel]++
+  agentResult.findings.forEach((finding) => {
+    severityDistribution[finding.severity]++
   })
 
   return {
-    vulnerabilities: agentResult.findings.map((finding: any) => ({
+    vulnerabilities: agentResult.findings.map((finding) => ({
       id: finding.id,
       type: finding.type.toString(),
       severity: finding.severity,

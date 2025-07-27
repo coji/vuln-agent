@@ -41,7 +41,13 @@ interface ManageTasksArgs {
   }
 }
 
-type ToolArgs = HttpRequestArgs | AnalyzeResponseArgs | ExtractLinksArgs | TestPayloadArgs | ManageTasksArgs | Record<string, unknown>
+type ToolArgs =
+  | HttpRequestArgs
+  | AnalyzeResponseArgs
+  | ExtractLinksArgs
+  | TestPayloadArgs
+  | ManageTasksArgs
+  | Record<string, unknown>
 
 // Tool result types
 interface ToolResult {
@@ -73,9 +79,10 @@ export const toolDisplayMap: Record<string, ToolDisplayInfo> = {
       if (result && typeof result === 'object' && 'success' in result) {
         const typedResult = result as ToolResult
         if (typedResult.success && typedResult.response) {
-          const bodyLength = typeof typedResult.response.body === 'string' 
-            ? typedResult.response.body.length 
-            : typedResult.response.body?.length || 0
+          const bodyLength =
+            typeof typedResult.response.body === 'string'
+              ? typedResult.response.body.length
+              : typedResult.response.body?.length || 0
           return `Response: ${typedResult.response.status} (${bodyLength} bytes)`
         } else if ('error' in typedResult && typedResult.error) {
           return `Failed: ${typedResult.error}`
@@ -110,7 +117,12 @@ export const toolDisplayMap: Record<string, ToolDisplayInfo> = {
   testPayload: {
     emoji: '💉',
     formatCall: (args) => {
-      if (args && typeof args === 'object' && 'vulnerabilityType' in args && 'context' in args) {
+      if (
+        args &&
+        typeof args === 'object' &&
+        'vulnerabilityType' in args &&
+        'context' in args
+      ) {
         const testArgs = args as TestPayloadArgs
         return `Testing ${testArgs.vulnerabilityType} on ${testArgs.context.url} (param: ${testArgs.context.parameter})`
       }
@@ -198,7 +210,11 @@ export function displayToolResult(
 
   const message = toolInfo.formatResult(result)
   if (message) {
-    const isSuccess = result && typeof result === 'object' && 'success' in result && (result as ToolResult).success
+    const isSuccess =
+      result &&
+      typeof result === 'object' &&
+      'success' in result &&
+      (result as ToolResult).success
     if (isSuccess) {
       out.success(`   ✓ ${message}`)
     } else {
