@@ -25,20 +25,20 @@ export const generateHTMLReport = (result: AgentScanResult): string => {
         <span class="finding-type">${finding.type}</span>
         <span class="severity-badge ${finding.severity}">${finding.severity.toUpperCase()}</span>
       </div>
-      <h3>${finding.description}</h3>
+      <h3>${escapeHtml(finding.description)}</h3>
       <div class="finding-details">
-        <p><strong>URL:</strong> <code>${finding.url}</code></p>
-        ${finding.parameter ? `<p><strong>Parameter:</strong> <code>${finding.parameter}</code></p>` : ''}
+        <p><strong>URL:</strong> <code>${escapeHtml(finding.url)}</code></p>
+        ${finding.parameter ? `<p><strong>Parameter:</strong> <code>${escapeHtml(finding.parameter)}</code></p>` : ''}
         ${finding.evidence.payload ? `<p><strong>Payload:</strong> <code>${escapeHtml(finding.evidence.payload)}</code></p>` : ''}
         <p><strong>Confidence:</strong> ${Math.round(finding.confidence * 100)}%</p>
       </div>
       <div class="recommendation">
         <h4>Recommendation</h4>
-        <p>${finding.recommendation}</p>
+        <p>${escapeHtml(finding.recommendation)}</p>
       </div>
       <details class="evidence-details">
         <summary>Technical Evidence</summary>
-        <pre>${JSON.stringify(finding.evidence, null, 2)}</pre>
+        <pre>${escapeHtml(JSON.stringify(finding.evidence, null, 2))}</pre>
       </details>
     </div>
   `,
@@ -336,8 +336,8 @@ export const generateHTMLReport = (result: AgentScanResult): string => {
       </div>
       
       <p style="margin-top: 1rem;">
-        <strong>Target:</strong> ${result.targetUrl}<br>
-        <strong>Session ID:</strong> ${result.sessionId}<br>
+        <strong>Target:</strong> ${escapeHtml(result.targetUrl)}<br>
+        <strong>Session ID:</strong> ${escapeHtml(result.sessionId)}<br>
         <strong>Scan Date:</strong> ${new Date().toLocaleString()}
       </p>
       
@@ -375,7 +375,7 @@ export const generateHTMLReport = (result: AgentScanResult): string => {
     }
     
     function generateMarkdown() {
-      const result = ${JSON.stringify(result)};
+      const result = ${JSON.stringify(result).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026').replace(/'/g, '\\u0027').replace(/"/g, '\\u0022')};
       let md = '# VulnAgent Security Report\\n\\n';
       md += '## Summary\\n\\n';
       md += \`- **Target**: \${result.targetUrl}\\n\`;

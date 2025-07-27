@@ -26,24 +26,42 @@ export const createAnalyzeResponseTool = (llm: LLMProvider): VulnAgentTool => {
       parameters: z.object({
         response: z
           .object({
-            status: z.number(),
-            headers: z.record(z.string()),
-            body: z.string(),
-            url: z.string(),
+            status: z
+              .number()
+              .describe('HTTP status code (e.g., 200, 404, 500)'),
+            headers: z
+              .record(z.string())
+              .describe('HTTP response headers as key-value pairs'),
+            body: z.string().describe('The full response body content'),
+            url: z.string().describe('The URL that was requested'),
           })
           .describe('The HTTP response to analyze'),
         context: z
           .object({
             request: z
               .object({
-                method: z.string(),
-                url: z.string(),
-                headers: z.record(z.string()).optional(),
-                body: z.string().optional(),
+                method: z
+                  .string()
+                  .describe('HTTP method used (GET, POST, etc.)'),
+                url: z.string().describe('The URL that was requested'),
+                headers: z
+                  .record(z.string())
+                  .optional()
+                  .describe('Request headers sent'),
+                body: z
+                  .string()
+                  .optional()
+                  .describe('Request body if applicable'),
               })
               .optional(),
-            previousFindings: z.array(z.string()).optional(),
-            targetInfo: z.any().optional(),
+            previousFindings: z
+              .array(z.string())
+              .optional()
+              .describe('List of previously found vulnerabilities'),
+            targetInfo: z
+              .any()
+              .optional()
+              .describe('Additional information about the target application'),
           })
           .optional()
           .describe('Additional context for analysis'),

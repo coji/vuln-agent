@@ -20,8 +20,10 @@ export const createTestPayloadTool = (llm: LLMProvider): VulnAgentTool => {
           .describe('Type of vulnerability to test for'),
         context: z
           .object({
-            url: z.string(),
-            parameter: z.string(),
+            url: z.string().describe('Target URL being tested'),
+            parameter: z
+              .string()
+              .describe('Parameter name to inject payload into'),
             parameterLocation: z.enum([
               'query',
               'body',
@@ -29,11 +31,11 @@ export const createTestPayloadTool = (llm: LLMProvider): VulnAgentTool => {
               'cookie',
               'path',
             ]),
-            method: z.string(),
+            method: z.string().describe('HTTP method (GET, POST, etc.)'),
             previousAttempts: z
               .array(
                 z.object({
-                  payload: z.string(),
+                  payload: z.string().describe('Previously tested payload'),
                   result: z.enum([
                     'blocked',
                     'reflected',
@@ -41,25 +43,31 @@ export const createTestPayloadTool = (llm: LLMProvider): VulnAgentTool => {
                     'no_change',
                     'success',
                   ]),
-                  response: z.string().optional(),
+                  response: z
+                    .string()
+                    .optional()
+                    .describe('Response snippet if available'),
                 }),
               )
               .optional(),
-            technologies: z.array(z.string()).optional(),
+            technologies: z
+              .array(z.string())
+              .optional()
+              .describe('Detected technologies/frameworks'),
           })
           .describe('Context for payload generation'),
         baselineResponse: z
           .object({
-            status: z.number(),
-            headers: z.record(z.string()),
-            body: z.string(),
+            status: z.number().describe('HTTP response status code'),
+            headers: z.record(z.string()).describe('Response headers'),
+            body: z.string().describe('Response body content'),
           })
           .describe('Normal response without payload'),
         testResponse: z
           .object({
-            status: z.number(),
-            headers: z.record(z.string()),
-            body: z.string(),
+            status: z.number().describe('HTTP response status code'),
+            headers: z.record(z.string()).describe('Response headers'),
+            body: z.string().describe('Response body content'),
           })
           .describe('Response after payload injection'),
       }),

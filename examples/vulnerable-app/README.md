@@ -5,6 +5,7 @@ This is a deliberately vulnerable web application designed for testing VulnAgent
 ## ⚠️ WARNING
 
 **This application contains intentional security vulnerabilities!**
+
 - Only run in a safe, isolated environment
 - Never deploy to production
 - Use only for testing security scanners

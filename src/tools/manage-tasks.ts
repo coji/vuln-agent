@@ -18,19 +18,28 @@ export const createManageTasksTool = (llm: LLMProvider): VulnAgentTool => {
           .describe('Action to perform on tasks'),
         task: z
           .object({
-            id: z.string().optional(),
+            id: z
+              .string()
+              .optional()
+              .describe('Task ID (auto-generated if not provided)'),
             type: z.enum([
               'test_endpoint',
               'analyze_response',
               'extract_links',
               'test_payload',
             ]),
-            target: z.string(),
-            priority: z.number().optional(),
+            target: z.string().describe('Target URL or endpoint for the task'),
+            priority: z
+              .number()
+              .optional()
+              .describe('Task priority (lower number = higher priority)'),
             status: z
               .enum(['pending', 'in_progress', 'completed', 'failed'])
               .optional(),
-            metadata: z.record(z.unknown()).optional(),
+            metadata: z
+              .record(z.unknown())
+              .optional()
+              .describe('Additional task-specific data'),
           })
           .optional()
           .describe('Task details for add/update actions'),
@@ -39,15 +48,24 @@ export const createManageTasksTool = (llm: LLMProvider): VulnAgentTool => {
             status: z
               .enum(['pending', 'in_progress', 'completed', 'failed'])
               .optional(),
-            type: z.string().optional(),
+            type: z.string().optional().describe('Task type to filter by'),
           })
           .optional()
           .describe('Filter for get action'),
         context: z
           .object({
-            currentFindings: z.array(z.string()).optional(),
-            completedTasks: z.number().optional(),
-            remainingSteps: z.number().optional(),
+            currentFindings: z
+              .array(z.string())
+              .optional()
+              .describe('List of vulnerabilities found so far'),
+            completedTasks: z
+              .number()
+              .optional()
+              .describe('Number of completed tasks'),
+            remainingSteps: z
+              .number()
+              .optional()
+              .describe('Remaining steps in scan'),
           })
           .optional()
           .describe('Context for prioritization'),

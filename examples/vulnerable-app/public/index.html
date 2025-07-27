@@ -1,86 +1,96 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vulnerable Test App</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .warning {
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-        }
-        .vulnerability {
-            background-color: #f8f9fa;
-            padding: 10px;
-            margin: 10px 0;
-            border-left: 4px solid #dc3545;
-        }
-        input, textarea, button {
-            margin: 5px 0;
-            padding: 5px;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+      }
+      .vulnerability {
+        background-color: #f8f9fa;
+        padding: 10px;
+        margin: 10px 0;
+        border-left: 4px solid #dc3545;
+      }
+      input,
+      textarea,
+      button {
+        margin: 5px 0;
+        padding: 5px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Vulnerable Test Application</h1>
-    
+
     <div class="warning">
-        <strong>⚠️ WARNING:</strong> This application contains intentional security vulnerabilities for testing purposes only!
+      <strong>⚠️ WARNING:</strong> This application contains intentional
+      security vulnerabilities for testing purposes only!
     </div>
 
     <h2>Test Vulnerabilities:</h2>
 
     <div class="vulnerability">
-        <h3>1. Reflected XSS</h3>
-        <p>Search functionality with no input sanitization</p>
-        <form action="/search" method="GET">
-            <input type="text" name="q" placeholder="Try: <script>alert('XSS')</script>">
-            <button type="submit">Search</button>
-        </form>
+      <h3>1. Reflected XSS</h3>
+      <p>Search functionality with no input sanitization</p>
+      <form action="/search" method="GET">
+        <input
+          type="text"
+          name="q"
+          placeholder="Try: <script>alert('XSS')</script>"
+        />
+        <button type="submit">Search</button>
+      </form>
     </div>
 
     <div class="vulnerability">
-        <h3>2. SQL Injection</h3>
-        <p>User lookup with vulnerable SQL query</p>
-        <p>Try these URLs:</p>
-        <ul>
-            <li><a href="/user/1">/user/1</a> (normal)</li>
-            <li><a href="/user/1 OR 1=1">/user/1 OR 1=1</a> (SQL injection)</li>
-            <li><a href="/user/1 UNION SELECT 1,username,password,email FROM users">/user/1 UNION SELECT...</a></li>
-        </ul>
+      <h3>2. SQL Injection</h3>
+      <p>User lookup with vulnerable SQL query</p>
+      <p>Try these URLs:</p>
+      <ul>
+        <li><a href="/user/1">/user/1</a> (normal)</li>
+        <li><a href="/user/1 OR 1=1">/user/1 OR 1=1</a> (SQL injection)</li>
+        <li>
+          <a href="/user/1 UNION SELECT 1,username,password,email FROM users"
+            >/user/1 UNION SELECT...</a
+          >
+        </li>
+      </ul>
     </div>
 
     <div class="vulnerability">
-        <h3>3. Stored XSS</h3>
-        <p>Comment system that stores unsanitized input</p>
-        <a href="/comments">View/Add Comments</a>
+      <h3>3. Stored XSS</h3>
+      <p>Comment system that stores unsanitized input</p>
+      <a href="/comments">View/Add Comments</a>
     </div>
 
     <div class="vulnerability">
-        <h3>4. Authentication Bypass</h3>
-        <p>Login form vulnerable to SQL injection</p>
-        <form action="/login" method="POST">
-            <input type="text" name="username" placeholder="Try: admin' --"><br>
-            <input type="password" name="password" placeholder="anything"><br>
-            <button type="submit">Login</button>
-        </form>
-        <p>Hint: <code>admin' --</code> as username bypasses authentication</p>
+      <h3>4. Authentication Bypass</h3>
+      <p>Login form vulnerable to SQL injection</p>
+      <form action="/login" method="POST">
+        <input type="text" name="username" placeholder="Try: admin' --" /><br />
+        <input type="password" name="password" placeholder="anything" /><br />
+        <button type="submit">Login</button>
+      </form>
+      <p>Hint: <code>admin' --</code> as username bypasses authentication</p>
     </div>
 
     <div class="vulnerability">
-        <h3>5. Information Disclosure</h3>
-        <p>Debug endpoint exposes sensitive information</p>
-        <a href="/debug">/debug</a>
+      <h3>5. Information Disclosure</h3>
+      <p>Debug endpoint exposes sensitive information</p>
+      <a href="/debug">/debug</a>
     </div>
-
-</body>
+  </body>
 </html>

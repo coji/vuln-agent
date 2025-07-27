@@ -21,7 +21,11 @@ export const createHttpRequestTool = (config: {
       description:
         'Send HTTP request to target URL with rate limiting and whitelist protection',
       parameters: z.object({
-        url: z.string().url().describe('The URL to send the request to'),
+        url: z
+          .string()
+          .describe(
+            'The full URL to send the HTTP request to (e.g., https://example.com/api/endpoint)',
+          ),
         method: z
           .enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'])
           .default('GET')

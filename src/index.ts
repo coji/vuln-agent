@@ -1,5 +1,6 @@
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { createVulnAgent as createAgent } from './agent.js'
 import { generateHTMLReport } from './html-generator.js'
 import { createLLM } from './llm.js'
 import {
@@ -7,8 +8,7 @@ import {
   createJsonReporter,
   createMarkdownReporter,
 } from './reporter.js'
-import { createWebScanner } from './scanner.js'
-import type { LLMProviderType } from './types.js'
+import type { AnalysisResult, LLMProviderType, SeverityLevel } from './types.js'
 import { createLogger } from './utils.js'
 
 interface Reporters {
@@ -76,10 +76,81 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
 
   return {
     analyze: async (targetUrl: string) => {
-      const result = await createWebScanner(targetUrl, {
+      // Run the AI agent scan
+      if (!vulnLLMProvider) {
+        logger.warn(
+          'No LLM provider configured. Please provide an LLM provider for vulnerability scanning.',
+        )
+        return {
+          vulnerabilities: [],
+          scannedFiles: 0,
+          duration: 0,
+          summary: {
+            totalVulnerabilities: 0,
+            severityDistribution: {
+              critical: 0,
+              high: 0,
+              medium: 0,
+              low: 0,
+              info: 0,
+            },
+          },
+          metadata: {
+            error: 'No LLM provider configured',
+          },
+        }
+      }
+
+      const agent = createAgent({
+        llmProvider: vulnLLMProvider,
         whitelist: options.whitelist || [],
-        llm: vulnLLMProvider ? { provider: vulnLLMProvider } : undefined,
+        maxSteps: 100,
+        verbose: true,
       })
+
+      const agentResult = await agent.scan(targetUrl)
+
+      // Calculate severity distribution
+      const severityDistribution: Record<SeverityLevel, number> = {
+        critical: 0,
+        high: 0,
+        medium: 0,
+        low: 0,
+        info: 0,
+      }
+
+      agentResult.findings.forEach((finding) => {
+        severityDistribution[finding.severity]++
+      })
+
+      // Convert agent findings to AnalysisResult format
+      const result: AnalysisResult = {
+        vulnerabilities: agentResult.findings.map((finding) => ({
+          id: finding.id,
+          type: finding.type.toString(),
+          severity: finding.severity,
+          file: finding.url,
+          line: 0,
+          column: 0,
+          message: finding.description,
+          code: finding.evidence.payload || '',
+          rule: `ai-${finding.type.toLowerCase()}`,
+        })),
+        findings: agentResult.findings,
+        scannedFiles: agentResult.stepsExecuted,
+        duration: agentResult.duration,
+        summary: {
+          totalVulnerabilities: agentResult.findings.length,
+          severityDistribution,
+        },
+        metadata: {
+          agentSteps: agentResult.stepsExecuted,
+          completed: !agentResult.error,
+          toolsUsed: agentResult.toolsUsed,
+          strategy: agentResult.strategy,
+          strategyUpdates: agentResult.strategyUpdates,
+        },
+      }
 
       // Generate HTML report if requested or if vulnerabilities found
       let reportPath: string | undefined

@@ -14,27 +14,43 @@ export const createUpdateStrategyTool = (llm: LLMProvider): VulnAgentTool => {
         sessionId: z.string().describe('Current scan session ID'),
         currentState: z
           .object({
-            completedSteps: z.number(),
-            remainingSteps: z.number(),
+            completedSteps: z
+              .number()
+              .describe('Number of completed scan steps'),
+            remainingSteps: z.number().describe('Estimated remaining steps'),
             findings: z.array(
               z.object({
-                type: z.string(),
-                severity: z.string(),
-                target: z.string(),
+                type: z.string().describe('Vulnerability type'),
+                severity: z.string().describe('Severity level'),
+                target: z.string().describe('Affected URL or endpoint'),
               }),
             ),
-            testedEndpoints: z.array(z.string()),
-            discoveredEndpoints: z.array(z.string()),
-            blockedPayloads: z.array(z.string()).optional(),
-            technologies: z.array(z.string()).optional(),
+            testedEndpoints: z
+              .array(z.string())
+              .describe('List of already tested endpoints'),
+            discoveredEndpoints: z
+              .array(z.string())
+              .describe('List of discovered but not yet tested endpoints'),
+            blockedPayloads: z
+              .array(z.string())
+              .optional()
+              .describe('Payloads that were blocked/filtered'),
+            technologies: z
+              .array(z.string())
+              .optional()
+              .describe('Detected technologies/frameworks'),
           })
           .describe('Current scan state'),
         currentStrategy: z
           .object({
-            focusAreas: z.array(z.string()),
-            skipPatterns: z.array(z.string()),
-            maxDepth: z.number(),
-            testIntensity: z.enum(['light', 'normal', 'thorough']),
+            focusAreas: z
+              .array(z.string())
+              .describe('Areas to focus testing on'),
+            skipPatterns: z.array(z.string()).describe('URL patterns to skip'),
+            maxDepth: z.number().describe('Maximum crawl depth'),
+            testIntensity: z
+              .enum(['light', 'normal', 'thorough'])
+              .describe('Testing intensity level'),
           })
           .optional()
           .describe('Current strategy if exists'),

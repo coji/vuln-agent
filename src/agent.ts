@@ -11,6 +11,11 @@ import {
   getSessionFindings,
   getSessionStrategy,
 } from './tools/index.js'
+import {
+  displayToolCall,
+  displayToolResult,
+  getToolEmoji,
+} from './tools/tool-display.js'
 import type { LLMProvider, ScanSession, VulnerabilityFinding } from './types.js'
 import { createLogger, output } from './utils.js'
 
@@ -46,7 +51,7 @@ export const createVulnAgent = (config: AgentConfig) => {
     let reportPath: string | undefined
     let currentToolCall: { name: string; params?: string } | null = null
 
-    logger.info(`Starting autonomous scan of ${targetUrl}`)
+    logger.info(`[AGENT] Starting autonomous scan of ${targetUrl}`)
     output.scanning(`Initializing AI agent with ${maxSteps} max steps...`)
 
     // Initialize session
@@ -127,20 +132,12 @@ export const createVulnAgent = (config: AgentConfig) => {
             toolsUsed.add(call.toolName)
             logger.info(`Tool executed: ${call.toolName}`)
 
-            // Display finding notifications
-            if (call.toolName === 'reportFinding') {
-              const findings = getSessionFindings(sessionId)
-              const lastFinding = findings[findings.length - 1]
-              if (lastFinding) {
-                output.found(
-                  `Found ${lastFinding.severity} severity ${lastFinding.type} vulnerability`,
-                )
-              }
-            }
-
+            // Display detailed tool information
             if (call.toolName === 'updateStrategy') {
               strategyUpdates++
             }
+
+            displayToolCall(call, output, sessionId, { strategyUpdates })
           })
 
           currentToolCall = null
@@ -151,32 +148,63 @@ export const createVulnAgent = (config: AgentConfig) => {
       let buffer = ''
       let isThinking = false
 
-      for await (const chunk of result.textStream) {
-        // Buffer chunks to detect tool calls
-        buffer += chunk
+      // Use fullStream to get all events
+      for await (const chunk of result.fullStream) {
+        // Handle text chunks
+        if (chunk.type === 'text-delta') {
+          buffer += chunk.textDelta
 
-        // Detect tool call patterns
-        const toolCallMatch = buffer.match(
-          /(?:Now |Let me |I'll |I will |Next, I'll |I'm going to )?(use|call|execute|run) (?:the )?(\w+)(?: tool)?(?: (?:to|for|with) ([^.]+))?/i,
-        )
+          // Detect tool call patterns
+          const toolCallMatch = buffer.match(
+            /(?:Now |Let me |I'll |I will |Next, I'll |I'm going to )?(use|call|execute|run) (?:the )?(\w+)(?: tool)?(?: (?:to|for|with) ([^.]+))?/i,
+          )
 
-        if (toolCallMatch && !currentToolCall) {
-          const toolName = toolCallMatch[2]
-          const purpose = toolCallMatch[3]
+          if (toolCallMatch && !currentToolCall) {
+            const toolName = toolCallMatch[2]
+            const purpose = toolCallMatch[3]
 
+            // Clear thinking indicator
+            if (isThinking) {
+              output.clearLine()
+              isThinking = false
+            }
+
+            currentToolCall = { name: toolName, params: purpose }
+            output.tool(toolName, purpose)
+            buffer = ''
+          } else if (!currentToolCall && !isThinking && buffer.length > 10) {
+            // Show thinking indicator
+            output.thinking('AI is analyzing...')
+            isThinking = true
+          }
+        }
+
+        // Handle tool call events for real-time feedback
+        if (chunk.type === 'tool-call' && 'toolName' in chunk) {
           // Clear thinking indicator
           if (isThinking) {
             output.clearLine()
             isThinking = false
           }
 
-          currentToolCall = { name: toolName, params: purpose }
-          output.tool(toolName, purpose)
-          buffer = ''
-        } else if (!currentToolCall && !isThinking && buffer.length > 10) {
-          // Show thinking indicator
-          output.thinking('AI is analyzing...')
-          isThinking = true
+          // Show tool being called
+          const toolCallChunk = chunk as { type: 'tool-call'; toolName: string }
+          const toolEmoji = getToolEmoji(toolCallChunk.toolName)
+          output.info(`${toolEmoji} Calling ${toolCallChunk.toolName}...`)
+        }
+
+        // Handle tool result events
+        if (chunk.type === 'tool-result' && 'toolName' in chunk) {
+          const toolResultChunk = chunk as {
+            type: 'tool-result'
+            toolName: string
+            result: unknown
+          }
+          displayToolResult(
+            toolResultChunk.toolName,
+            toolResultChunk.result,
+            output,
+          )
         }
       }
 

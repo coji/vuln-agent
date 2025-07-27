@@ -12,8 +12,9 @@ export const createExtractLinksTool = (llm: LLMProvider): VulnAgentTool => {
         content: z.string().describe('HTML or JavaScript content to analyze'),
         baseUrl: z
           .string()
-          .url()
-          .describe('Base URL for resolving relative links'),
+          .describe(
+            'Base URL for resolving relative links (e.g., https://example.com)',
+          ),
         contentType: z
           .enum(['html', 'javascript', 'json', 'unknown'])
           .default('unknown')

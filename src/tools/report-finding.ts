@@ -22,33 +22,51 @@ export const createReportFindingTool = (): VulnAgentTool => {
               'Other',
             ]),
             severity: z.enum(['critical', 'high', 'medium', 'low', 'info']),
-            url: z.string(),
-            parameter: z.string().optional(),
+            url: z.string().describe('URL where vulnerability was found'),
+            parameter: z
+              .string()
+              .optional()
+              .describe('Affected parameter name if applicable'),
             evidence: z.object({
               request: z.object({
-                method: z.string(),
-                url: z.string(),
-                headers: z.record(z.string()).optional(),
-                body: z.string().optional(),
+                method: z.string().describe('HTTP method used'),
+                url: z.string().describe('Full request URL'),
+                headers: z
+                  .record(z.string())
+                  .optional()
+                  .describe('Request headers'),
+                body: z.string().optional().describe('Request body'),
               }),
               response: z.object({
-                status: z.number(),
-                headers: z.record(z.string()),
-                body: z.string(),
+                status: z.number().describe('Response status code'),
+                headers: z.record(z.string()).describe('Response headers'),
+                body: z.string().describe('Response body (may be truncated)'),
               }),
-              payload: z.string().optional(),
+              payload: z
+                .string()
+                .optional()
+                .describe('The payload that triggered the vulnerability'),
             }),
-            description: z.string(),
-            recommendation: z.string(),
-            confidence: z.number().min(0).max(1),
+            description: z
+              .string()
+              .describe('Detailed description of the vulnerability'),
+            recommendation: z.string().describe('Remediation recommendations'),
+            confidence: z
+              .number()
+              .min(0)
+              .max(1)
+              .describe('Confidence score (0-1)'),
           })
           .describe('Vulnerability details to report'),
         metadata: z
           .object({
-            technique: z.string().optional(),
-            cwe: z.string().optional(),
-            owasp: z.string().optional(),
-            references: z.array(z.string()).optional(),
+            technique: z.string().optional().describe('Attack technique used'),
+            cwe: z.string().optional().describe('CWE ID if applicable'),
+            owasp: z.string().optional().describe('OWASP category'),
+            references: z
+              .array(z.string())
+              .optional()
+              .describe('Reference URLs'),
           })
           .optional()
           .describe('Additional metadata'),
