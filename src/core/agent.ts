@@ -73,7 +73,8 @@ export const createVulnAgent = (config: AgentConfig) => {
     try {
       // Initialize all tools as AI SDK tools
       const tools = {
-        httpRequest: createHttpRequestTool({ whitelist: config.whitelist }).tool,
+        httpRequest: createHttpRequestTool({ whitelist: config.whitelist })
+          .tool,
         analyzeResponse: createAnalyzeResponseTool(config.llmProvider).tool,
         extractLinks: createExtractLinksTool(config.llmProvider).tool,
         testPayload: createTestPayloadTool(config.llmProvider).tool,
@@ -114,7 +115,7 @@ export const createVulnAgent = (config: AgentConfig) => {
         tools,
         onStepFinish: (stepResult) => {
           session.currentStep++
-          
+
           if (config.verbose) {
             output.scanning(`Step ${session.currentStep}/${maxSteps}`)
           }
@@ -123,7 +124,7 @@ export const createVulnAgent = (config: AgentConfig) => {
           stepResult.toolCalls.forEach((call) => {
             toolsUsed.add(call.toolName)
             logger.info(`Tool executed: ${call.toolName}`)
-            
+
             if (config.verbose && call.toolName === 'reportFinding') {
               const findings = getSessionFindings(sessionId)
               const lastFinding = findings[findings.length - 1]

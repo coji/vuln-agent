@@ -32,8 +32,8 @@ export const parseAnalysisResponse = (
   }
 }
 
-import { generateObject } from 'ai'
 import type { LanguageModelV1 } from 'ai'
+import { generateObject } from 'ai'
 import type { z } from 'zod'
 
 export const createBaseProvider = (

@@ -1,7 +1,7 @@
 import { createVulnAgent } from '../core/agent.js'
 import type { AnalysisResult } from '../core/types.js'
-import { createLogger } from '../utils/logger.js'
 import type { LLMProvider } from '../llm/types.js'
+import { createLogger } from '../utils/logger.js'
 
 export interface WebScannerOptions {
   httpClient: HttpClient
