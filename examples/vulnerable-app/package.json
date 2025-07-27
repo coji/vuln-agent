@@ -1,0 +1,14 @@
+{
+  "name": "vulnerable-app",
+  "version": "1.0.0",
+  "description": "A deliberately vulnerable web app for testing VulnAgent",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6"
+  },
+  "packageManager": "pnpm@10.12.4"
+}

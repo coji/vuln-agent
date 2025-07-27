@@ -120,6 +120,27 @@ VulnAgent uses AI to:
 
 The AI adapts its strategy based on what it discovers, making it more effective than rule-based scanners.
 
+## 🧪 Try It Out
+
+We provide a vulnerable test application to demonstrate VulnAgent's capabilities:
+
+```bash
+# 1. Start the vulnerable test app
+cd examples/vulnerable-app
+pnpm install
+pnpm start
+
+# 2. In another terminal, scan it with VulnAgent
+npx vuln-agent scan http://localhost:3000 --llm claude-sonnet-4 -v
+
+# 3. Generate an HTML report
+npx vuln-agent scan http://localhost:3000 --llm claude-sonnet-4 -f html
+```
+
+The test app includes common vulnerabilities like XSS, SQL injection, and authentication bypass. VulnAgent should detect these and provide detailed reports.
+
+⚠️ **Warning**: Only run the test app in a safe, isolated environment!
+
 ## 🛠️ Advanced Usage
 
 ### For Developers
