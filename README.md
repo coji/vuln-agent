@@ -59,6 +59,76 @@ pnpm install
 pnpm build
 ```
 
+#### Running from Source
+
+```bash
+# Set up your API key
+export ANTHROPIC_API_KEY=your-api-key
+
+# Run directly with Node.js
+node dist/src/cli.js scan https://example.com --llm claude-sonnet-4
+
+# Or use npm link for global installation
+npm link
+vuln-agent scan https://example.com --llm claude-sonnet-4
+```
+
+#### Testing Local Applications
+
+```bash
+# Start your local development server (e.g., on port 3000)
+npm run dev  # in your app directory
+
+# In another terminal, scan your local app
+npx vuln-agent scan http://localhost:3000 --llm claude-sonnet-4
+
+# With whitelist for additional security
+npx vuln-agent scan http://localhost:3000 --llm claude-sonnet-4 -w localhost
+
+# Enable verbose mode to see what the AI is doing
+npx vuln-agent scan http://localhost:3000 --llm claude-sonnet-4 -v
+
+# Generate HTML report
+npx vuln-agent scan http://localhost:3000 --llm claude-sonnet-4 -f html
+```
+
+#### Using with Docker Containers
+
+```bash
+# Scan a Docker container running on localhost
+docker run -p 8080:80 my-app
+npx vuln-agent scan http://localhost:8080 --llm claude-sonnet-4
+
+# Scan with custom headers (useful for auth)
+# Note: Custom headers feature coming soon
+```
+
+#### Environment Variables
+
+Create a `.env` file in your project root:
+
+```bash
+# Copy from .env.example
+cp .env.example .env
+
+# Edit .env with your API keys
+ANTHROPIC_API_KEY=sk-ant-...
+# or
+OPENAI_API_KEY=sk-...
+# or
+GOOGLE_GENERATIVE_AI_API_KEY=...
+```
+
+Then run without specifying API keys:
+
+```bash
+# Load environment variables
+source .env  # or use dotenv-cli
+
+# Run scan
+npx vuln-agent scan http://localhost:3000 --llm claude-sonnet-4
+```
+
 ## 🔧 Configuration
 
 Set your LLM provider API key as an environment variable:
