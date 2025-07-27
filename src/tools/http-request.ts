@@ -2,6 +2,7 @@ import { tool } from 'ai'
 import { z } from 'zod'
 import { createHttpClient } from '../http-client.js'
 import type { VulnAgentTool } from '../types.js'
+import { debug } from '../utils.js'
 
 export const createHttpRequestTool = (config: {
   whitelist: string[]
@@ -40,6 +41,18 @@ export const createHttpRequestTool = (config: {
           .describe('Request body for POST/PUT/PATCH methods'),
       }),
       execute: async (params) => {
+        debug.vulnerability(
+          'httpRequest tool: %s %s',
+          params.method || 'GET',
+          params.url,
+        )
+        if (params.headers) {
+          debug.vulnerability('Request headers: %O', params.headers)
+        }
+        if (params.body) {
+          debug.vulnerability('Request body: %s', params.body.substring(0, 200))
+        }
+
         try {
           const response = await httpClient.request({
             url: params.url,
@@ -47,6 +60,12 @@ export const createHttpRequestTool = (config: {
             headers: params.headers,
             body: params.body,
           })
+
+          debug.vulnerability(
+            'httpRequest response: %d %s',
+            response.status,
+            response.url,
+          )
 
           return {
             success: true,
@@ -58,6 +77,10 @@ export const createHttpRequestTool = (config: {
             },
           }
         } catch (error) {
+          debug.vulnerability(
+            'httpRequest error: %s',
+            error instanceof Error ? error.message : 'Unknown error',
+          )
           return {
             success: false,
             error:

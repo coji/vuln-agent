@@ -3,10 +3,9 @@ import { homedir, platform } from 'node:os'
 import { join } from 'node:path'
 
 export interface VulnAgentConfig {
-  mode?: string
   format?: string
-  extensions?: string[]
-  ignore?: string[]
+  defaultLLM?: string
+  maxSteps?: number
   web?: {
     whitelist?: string[]
   }
@@ -72,10 +71,9 @@ export const ensureGlobalConfigDir = async (): Promise<void> => {
  */
 export const loadConfig = async (): Promise<VulnAgentConfig> => {
   const defaultConfig: VulnAgentConfig = {
-    mode: 'web',
     format: 'console',
-    extensions: ['.js', '.ts', '.jsx', '.tsx'],
-    ignore: ['node_modules', '.git', 'dist', 'build'],
+    defaultLLM: '',
+    maxSteps: 100,
     web: {
       whitelist: [],
     },

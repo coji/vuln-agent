@@ -5,6 +5,7 @@ import type { LanguageModelV1 } from 'ai'
 import { generateObject } from 'ai'
 import type { z } from 'zod'
 import type { LLMConfig, LLMProvider } from './types.js'
+import { debug } from './utils.js'
 
 /**
  * Creates a base LLM provider with common functionality
@@ -13,6 +14,8 @@ const createBaseProvider = (
   name: string,
   model: LanguageModelV1,
 ): LLMProvider => {
+  debug.llm('Creating LLM provider: %s', name)
+
   return {
     name,
     model,
@@ -20,11 +23,22 @@ const createBaseProvider = (
       prompt: string
       schema: z.ZodSchema<T>
     }) => {
+      debug.llm(
+        'Generating object with %s, prompt length: %d chars',
+        name,
+        params.prompt.length,
+      )
+
+      const startTime = Date.now()
       const result = await generateObject({
         model,
         prompt: params.prompt,
         schema: params.schema,
       })
+
+      const duration = Date.now() - startTime
+      debug.llm('LLM response received in %dms', duration)
+
       return { object: result.object }
     },
   }

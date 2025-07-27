@@ -1,4 +1,5 @@
 import type { HttpResponse } from './types.js'
+import { debug } from './utils.js'
 
 export interface HttpClient {
   request: (options: RequestOptions) => Promise<HttpResponse>
@@ -34,6 +35,7 @@ const createRateLimiter = (config: {
 
     // Reset window if needed
     if (now - windowStart >= config.windowMs) {
+      debug.http('Rate limiter window reset')
       requests = 0
       windowStart = now
     }
@@ -41,12 +43,14 @@ const createRateLimiter = (config: {
     // Wait if rate limit reached
     if (requests >= config.maxRequests) {
       const waitTime = config.windowMs - (now - windowStart)
+      debug.http('Rate limit reached, waiting %dms', waitTime)
       await delay(waitTime)
       requests = 0
       windowStart = Date.now()
     }
 
     requests++
+    debug.http('Request %d/%d in current window', requests, config.maxRequests)
   }
 
   return { throttle }
@@ -93,8 +97,18 @@ const retryWithBackoff = async <T>(
     try {
       return await fn()
     } catch (error) {
-      if (i === maxRetries - 1) throw error
-      await delay(2 ** i * 1000) // Exponential backoff
+      if (i === maxRetries - 1) {
+        debug.http('All retries exhausted, throwing error')
+        throw error
+      }
+      const backoffTime = 2 ** i * 1000
+      debug.http(
+        'Request failed, retry %d/%d after %dms',
+        i + 1,
+        maxRetries,
+        backoffTime,
+      )
+      await delay(backoffTime) // Exponential backoff
     }
   }
   throw new Error('Retry failed')
@@ -104,8 +118,11 @@ export const createHttpClient = (config: HttpClientConfig): HttpClient => {
   const rateLimiter = createRateLimiter(config.rateLimit)
 
   const request = async (options: RequestOptions): Promise<HttpResponse> => {
+    debug.http('HTTP request: %s %s', options.method || 'GET', options.url)
+
     // Whitelist check
     if (!isWhitelisted(options.url, config.whitelist)) {
+      debug.http('URL not whitelisted: %s', options.url)
       throw new Error(`URL not whitelisted: ${options.url}`)
     }
 
@@ -136,6 +153,13 @@ export const createHttpClient = (config: HttpClientConfig): HttpClient => {
         response.headers.forEach((value, key) => {
           headers[key.toLowerCase()] = value
         })
+
+        debug.http(
+          'Response: %d %s (body: %d bytes)',
+          response.status,
+          response.url,
+          responseBody.length,
+        )
 
         return {
           status: response.status,

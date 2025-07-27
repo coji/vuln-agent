@@ -17,7 +17,7 @@ import {
   getToolEmoji,
 } from './tools/tool-display.js'
 import type { LLMProvider, ScanSession, VulnerabilityFinding } from './types.js'
-import { createLogger, output } from './utils.js'
+import { createLogger, debug, output } from './utils.js'
 
 export interface AgentConfig {
   llmProvider: LLMProvider
@@ -42,6 +42,13 @@ export interface AgentScanResult {
 export const createVulnAgent = (config: AgentConfig) => {
   const logger = createLogger('agent')
   const maxSteps = config.maxSteps || 100
+
+  debug.scanner('Creating agent with config: %O', {
+    llmProvider: config.llmProvider.name,
+    whitelist: config.whitelist,
+    maxSteps,
+    verbose: config.verbose,
+  })
 
   const scan = async (targetUrl: string): Promise<AgentScanResult> => {
     const sessionId = `scan-${Date.now()}`
@@ -118,6 +125,12 @@ export const createVulnAgent = (config: AgentConfig) => {
         onStepFinish: (stepResult) => {
           session.currentStep++
 
+          debug.scanner(
+            'Step %d finished, tool calls: %O',
+            session.currentStep,
+            stepResult.toolCalls.map((tc) => tc.toolName),
+          )
+
           // Clear any thinking indicator
           if (currentToolCall) {
             output.clearLine()
@@ -131,6 +144,10 @@ export const createVulnAgent = (config: AgentConfig) => {
           stepResult.toolCalls.forEach((call) => {
             toolsUsed.add(call.toolName)
             logger.info(`Tool executed: ${call.toolName}`)
+            debug.scanner('Tool call details: %O', {
+              tool: call.toolName,
+              args: call.args,
+            })
 
             // Display detailed tool information
             if (call.toolName === 'updateStrategy') {
@@ -153,6 +170,7 @@ export const createVulnAgent = (config: AgentConfig) => {
         // Handle text chunks
         if (chunk.type === 'text-delta') {
           buffer += chunk.textDelta
+          debug.llm('Text delta received: %s', chunk.textDelta)
 
           // Detect tool call patterns
           const toolCallMatch = buffer.match(

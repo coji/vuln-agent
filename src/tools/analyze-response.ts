@@ -1,6 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import type { LLMProvider, VulnAgentTool } from '../types.js'
+import { debug } from '../utils.js'
 
 const vulnerabilitySchema = z.object({
   type: z.enum(['XSS', 'SQLi', 'Authentication', 'Configuration', 'Other']),
@@ -67,6 +68,17 @@ export const createAnalyzeResponseTool = (llm: LLMProvider): VulnAgentTool => {
           .describe('Additional context for analysis'),
       }),
       execute: async (params) => {
+        debug.vulnerability(
+          'analyzeResponse: Analyzing %s response (status: %d, body: %d chars)',
+          params.response.url,
+          params.response.status,
+          params.response.body.length,
+        )
+        debug.vulnerability(
+          'Previous findings: %d',
+          params.context?.previousFindings?.length || 0,
+        )
+
         try {
           const prompt = `Analyze this HTTP response for security vulnerabilities:
 

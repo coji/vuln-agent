@@ -20,6 +20,8 @@ interface Reporters {
 export interface VulnAgentOptions {
   format?: 'console' | 'json' | 'markdown' | 'html'
   whitelist?: string[]
+  maxSteps?: number
+  verbose?: boolean
   llm?: {
     provider: LLMProviderType
     apiKey?: string
@@ -104,8 +106,8 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
       const agent = createAgent({
         llmProvider: vulnLLMProvider,
         whitelist: options.whitelist || [],
-        maxSteps: 100,
-        verbose: true,
+        maxSteps: options.maxSteps || 100,
+        verbose: options.verbose || false,
       })
 
       const agentResult = await agent.scan(targetUrl)
