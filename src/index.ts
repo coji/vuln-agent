@@ -1,7 +1,7 @@
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { generateHTMLReport } from './infrastructure/storage/html-generator.js'
-import { createLLMProvider } from './llm.js'
+import { createLLM } from './llm.js'
 import {
   createConsoleReporter,
   createJsonReporter,
@@ -75,7 +75,7 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
 
     if (apiKey) {
       logger.info(`Using LLM provider: ${options.llm.provider}`)
-      vulnLLMProvider = createLLMProvider({
+      vulnLLMProvider = createLLM({
         provider: options.llm.provider,
         apiKey,
       })

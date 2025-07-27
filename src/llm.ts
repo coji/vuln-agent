@@ -100,6 +100,3 @@ export const createLLM = (config: LLMConfig): LLMProvider => {
       throw new Error(`Unknown provider: ${config.provider}`)
   }
 }
-
-// Re-export for backward compatibility (will be removed in Phase 4)
-export const createLLMProvider = createLLM

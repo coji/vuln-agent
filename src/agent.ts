@@ -1,5 +1,5 @@
 import { streamText } from 'ai'
-import { AGENT_SYSTEM_PROMPT } from './core/agent-prompts.js'
+import { AGENT_SYSTEM_PROMPT } from './agent-prompts.js'
 import {
   createAnalyzeResponseTool,
   createExtractLinksTool,

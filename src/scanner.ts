@@ -208,6 +208,9 @@ export const createWebScanner = async (
           info: 0,
         },
       },
+      metadata: {
+        error: 'No LLM provider configured',
+      },
     }
   }
 
@@ -268,5 +271,5 @@ export const createWebScanner = async (
   return result
 }
 
-// Re-export for backward compatibility (will be removed in Phase 4)
+// Re-export for backward compatibility
 export const createWebVulnerabilityScanner = createWebScanner

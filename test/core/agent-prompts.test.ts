@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   AGENT_SYSTEM_PROMPT,
   STEP_CONTEXT_TEMPLATE,
-} from '../../src/core/agent-prompts.js'
+} from '../../src/agent-prompts.js'
 
 describe('Agent Prompts', () => {
   describe('AGENT_SYSTEM_PROMPT', () => {
