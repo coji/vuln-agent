@@ -22,16 +22,6 @@ inputs:
     required: false
     default: 'console'
 
-  extensions:
-    description: 'File extensions to scan (comma-separated)'
-    required: false
-    default: '.js,.ts,.jsx,.tsx'
-
-  ignore:
-    description: 'Patterns to ignore (comma-separated)'
-    required: false
-    default: 'node_modules,.git,dist'
-
   fail-on-vulnerabilities:
     description: 'Fail the action if vulnerabilities are found'
     required: false
@@ -50,9 +40,11 @@ inputs:
 outputs:
   vulnerability-count:
     description: 'Number of vulnerabilities found'
+    value: ${{ steps.scan.outputs.vulnerability-count }}
 
   scan-report:
     description: 'Path to the scan report file'
+    value: ${{ steps.scan.outputs.scan-report }}
 
 runs:
   using: 'composite'
@@ -84,8 +76,6 @@ runs:
         fi
 
         CMD="$CMD --format ${{ inputs.format }}"
-        CMD="$CMD --extensions ${{ inputs.extensions }}"
-        CMD="$CMD --ignore ${{ inputs.ignore }}"
         CMD="$CMD ${{ inputs.path }}"
 
         # Run scan and capture output

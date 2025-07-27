@@ -22,6 +22,31 @@ VulnAgent is a **100% LLM-native** web vulnerability scanner that uses AI to aut
 
 ## 🛠️ Installation
 
+### Quick Start with npx (No Installation Required)
+
+```bash
+# Run directly with npx
+npx vuln-agent scan https://example.com --llm claude-sonnet-4
+
+# Specify a specific version
+npx vuln-agent@latest scan https://example.com --llm claude-sonnet-4
+```
+
+### Global Installation
+
+```bash
+# Install globally with npm
+npm install -g vuln-agent
+
+# Or with pnpm
+pnpm add -g vuln-agent
+
+# Then use directly
+vuln-agent scan https://example.com --llm claude-sonnet-4
+```
+
+### Local Development
+
 ```bash
 # Clone the repository
 git clone https://github.com/coji/vuln-agent.git
@@ -54,8 +79,11 @@ export GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
 ### Basic Web Vulnerability Scan
 
 ```bash
-# Scan a website with your preferred LLM
-node dist/src/cli.js scan https://example.com --llm claude-sonnet-4
+# Using npx (no installation required)
+npx vuln-agent scan https://example.com --llm claude-sonnet-4
+
+# Or if installed globally
+vuln-agent scan https://example.com --llm claude-sonnet-4
 
 # Available LLM providers:
 # - openai-o3
@@ -70,7 +98,6 @@ node dist/src/cli.js scan https://example.com --llm claude-sonnet-4
 vuln-agent scan [options] <target>
 
 Options:
-  -m, --mode <mode>        Scan mode (web only for now) (default: "web")
   -f, --format <format>    Output format (console|json|markdown) (default: "console")
   -l, --llm <provider>     LLM provider (required)
   -w, --whitelist <hosts>  Allowed hosts for web scanning (comma-separated)
@@ -83,20 +110,20 @@ Options:
 
 ```bash
 # Console output (default)
-node dist/src/cli.js scan https://example.com --llm claude-sonnet-4
+npx vuln-agent scan https://example.com --llm claude-sonnet-4
 
 # JSON output
-node dist/src/cli.js scan https://example.com --llm claude-sonnet-4 -f json
+npx vuln-agent scan https://example.com --llm claude-sonnet-4 -f json
 
 # Markdown output
-node dist/src/cli.js scan https://example.com --llm claude-sonnet-4 -f markdown
+npx vuln-agent scan https://example.com --llm claude-sonnet-4 -f markdown
 ```
 
 ### Verbose Mode
 
 ```bash
 # See what the AI agent is doing at each step
-node dist/src/cli.js scan https://example.com --llm claude-sonnet-4 --verbose
+npx vuln-agent scan https://example.com --llm claude-sonnet-4 --verbose
 ```
 
 ## 📊 HTML Report
@@ -134,7 +161,7 @@ The AI agent autonomously:
 
 ```bash
 # Scan a test application
-node dist/src/cli.js scan https://juice-shop.herokuapp.com --llm claude-sonnet-4 --verbose
+npx vuln-agent scan https://juice-shop.herokuapp.com --llm claude-sonnet-4 --verbose
 
 # Output
 🔍 Initializing AI agent with 100 max steps...

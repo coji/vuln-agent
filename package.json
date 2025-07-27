@@ -1,6 +1,6 @@
 {
   "name": "vuln-agent",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "LLM-powered vulnerability scanner for your codebase",
   "keywords": [
     "security",
@@ -28,6 +28,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "pnpm run build",
     "format": "prettier . --check --experimental-cli",
     "format:fix": "prettier . --write --experimental-cli",
     "lint": "biome lint .",
