@@ -124,11 +124,13 @@ VulnAgent is built on a **100% LLM-native architecture**. When contributing:
 ## 📝 Submitting Changes
 
 1. Ensure your code follows the style guide:
+
    ```bash
    pnpm validate
    ```
 
 2. Write clear commit messages:
+
    ```
    feat: add support for XXE vulnerability detection
    fix: improve error handling in HTTP client

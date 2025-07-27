@@ -98,7 +98,7 @@ vuln-agent scan https://example.com --llm claude-sonnet-4
 vuln-agent scan [options] <target>
 
 Options:
-  -f, --format <format>    Output format (console|json|markdown) (default: "console")
+  -f, --format <format>    Output format (console|json|markdown|html) (default: "console")
   -l, --llm <provider>     LLM provider (required)
   -w, --whitelist <hosts>  Allowed hosts for web scanning (comma-separated)
   -v, --verbose            Show detailed agent actions
@@ -117,6 +117,9 @@ npx vuln-agent scan https://example.com --llm claude-sonnet-4 -f json
 
 # Markdown output
 npx vuln-agent scan https://example.com --llm claude-sonnet-4 -f markdown
+
+# HTML report output
+npx vuln-agent scan https://example.com --llm claude-sonnet-4 -f html
 ```
 
 ### Verbose Mode
@@ -128,12 +131,18 @@ npx vuln-agent scan https://example.com --llm claude-sonnet-4 --verbose
 
 ## 📊 HTML Report
 
-When vulnerabilities are found, VulnAgent automatically generates a comprehensive HTML report with:
+VulnAgent can generate comprehensive HTML reports in two ways:
 
-- Visual severity distribution
+1. **Automatically**: When vulnerabilities are found (console format only)
+2. **On demand**: Using the `-f html` option
+
+The HTML report includes:
+
+- Visual severity distribution charts
 - Detailed findings with evidence
 - Remediation recommendations
 - Copy-to-markdown functionality
+- Interactive filtering and sorting
 
 The report is saved as `vuln-report-[timestamp].html` in your current directory.
 
@@ -210,7 +219,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Run VulnAgent Security Scan
         uses: coji/vuln-agent@v1
         with:
@@ -225,14 +234,14 @@ jobs:
 
 ### Action Inputs
 
-| Input | Description | Default |
-|-------|-------------|---------|
-| `path` | Path to scan (file, directory, or URL) | `.` |
-| `llm-provider` | LLM provider to use | _(required)_ |
-| `format` | Output format (console/json/markdown) | `console` |
-| `fail-on-vulnerabilities` | Fail if vulnerabilities found | `true` |
-| `comment-on-pr` | Comment results on PR | `false` |
-| `upload-results` | Upload scan results as artifact | `false` |
+| Input                     | Description                            | Default      |
+| ------------------------- | -------------------------------------- | ------------ |
+| `path`                    | Path to scan (file, directory, or URL) | `.`          |
+| `llm-provider`            | LLM provider to use                    | _(required)_ |
+| `format`                  | Output format (console/json/markdown)  | `console`    |
+| `fail-on-vulnerabilities` | Fail if vulnerabilities found          | `true`       |
+| `comment-on-pr`           | Comment results on PR                  | `false`      |
+| `upload-results`          | Upload scan results as artifact        | `false`      |
 
 ## 🧪 Development
 

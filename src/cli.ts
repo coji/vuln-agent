@@ -64,7 +64,7 @@ const createScanCommand = () => {
     .argument('<target>', 'Target URL')
     .option(
       '-f, --format <format>',
-      'Output format (console|json|markdown)',
+      'Output format (console|json|markdown|html)',
       'console',
     )
     .option(
@@ -90,7 +90,7 @@ const createScanCommand = () => {
     debug.cli('Raw options received: %O', options)
     debug.cli('LLM value: %s', options.llm)
     const vulnAgentOptions: VulnAgentOptions = {
-      format: options.format as 'console' | 'json' | 'markdown',
+      format: options.format as 'console' | 'json' | 'markdown' | 'html',
     }
 
     if (options.whitelist) {

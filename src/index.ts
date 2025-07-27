@@ -8,7 +8,7 @@ import {
   createMarkdownReporter,
 } from './reporter.js'
 import { createWebScanner } from './scanner.js'
-import type { AnalysisResult, LLMProviderType } from './types.js'
+import type { LLMProviderType } from './types.js'
 import { createLogger } from './utils.js'
 
 interface Reporters {
@@ -18,10 +18,7 @@ interface Reporters {
 }
 
 export interface VulnAgentOptions {
-  mode?: 'code' | 'web'
-  extensions?: string[]
-  ignore?: string[]
-  format?: 'console' | 'json' | 'markdown'
+  format?: 'console' | 'json' | 'markdown' | 'html'
   whitelist?: string[]
   llm?: {
     provider: LLMProviderType
@@ -30,28 +27,17 @@ export interface VulnAgentOptions {
 }
 
 export const createVulnAgent = (options: VulnAgentOptions = {}) => {
-  // Default to web mode
-  const mode = options.mode || 'web'
-
   // Common reporters
   const consoleReporter = createConsoleReporter()
   const jsonReporter = createJsonReporter()
   const markdownReporter = createMarkdownReporter()
 
-  // Mode-specific setup
-  if (mode === 'web') {
-    return createWebAgent(options, {
-      consoleReporter,
-      jsonReporter,
-      markdownReporter,
-    })
-  } else {
-    return createCodeAgent(options, {
-      consoleReporter,
-      jsonReporter,
-      markdownReporter,
-    })
-  }
+  // Always use web mode (code mode is disabled)
+  return createWebAgent(options, {
+    consoleReporter,
+    jsonReporter,
+    markdownReporter,
+  })
 }
 
 const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
@@ -94,71 +80,85 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
         llm: vulnLLMProvider ? { provider: vulnLLMProvider } : undefined,
       })
 
-      // Output results
+      // Generate HTML report if requested or if vulnerabilities found
+      let reportPath: string | undefined
+      if (options.format === 'html' || result.vulnerabilities.length > 0) {
+        if (result.findings && result.findings.length > 0) {
+          const agentResult = {
+            sessionId: `scan-${Date.now()}`,
+            targetUrl,
+            findings: result.findings,
+            stepsExecuted: result.scannedFiles,
+            duration: result.duration,
+          }
+
+          const htmlReport = generateHTMLReport(agentResult)
+          reportPath = join(process.cwd(), `vuln-report-${Date.now()}.html`)
+          writeFileSync(reportPath, htmlReport)
+          logger.info(`HTML report saved to: ${reportPath}`)
+        }
+      }
+
+      // Output results based on format
       if (options.format === 'json') {
         console.log(reporters.jsonReporter.generate(result))
       } else if (options.format === 'markdown') {
         console.log(reporters.markdownReporter.generate(result))
+      } else if (options.format === 'html') {
+        if (reportPath) {
+          console.log(`✅ HTML report generated: ${reportPath}`)
+        } else {
+          console.log('❌ No vulnerabilities found. HTML report not generated.')
+        }
       } else {
         console.log(reporters.consoleReporter.generate(result))
       }
 
-      // Generate HTML report if vulnerabilities found
-      if (result.vulnerabilities.length > 0 && vulnLLMProvider) {
-        const agentResult = {
-          sessionId: `scan-${Date.now()}`,
-          targetUrl,
-          findings: result.vulnerabilities.map((v) => ({
-            id: v.id,
-            type: v.type as
-              | 'XSS'
-              | 'SQLi'
-              | 'Authentication'
-              | 'Configuration'
-              | 'Other',
-            severity: v.severity,
-            url: v.file,
-            description: v.message,
-            recommendation: 'Please review and fix this vulnerability',
-            confidence: 0.9,
-            timestamp: new Date(),
-            evidence: {
-              request: { url: v.file, method: 'GET' },
-              response: { status: 200, headers: {}, body: '' },
-              payload: v.code,
-            },
-          })),
-          stepsExecuted: result.scannedFiles,
-          duration: result.duration,
-        }
+      // Legacy: Generate HTML report if vulnerabilities found (for backward compatibility)
+      if (!options.format || options.format === 'console') {
+        if (
+          result.vulnerabilities.length > 0 &&
+          vulnLLMProvider &&
+          !reportPath
+        ) {
+          const agentResult = {
+            sessionId: `scan-${Date.now()}`,
+            targetUrl,
+            findings: result.vulnerabilities.map((v) => ({
+              id: v.id,
+              type: v.type as
+                | 'XSS'
+                | 'SQLi'
+                | 'Authentication'
+                | 'Configuration'
+                | 'Other',
+              severity: v.severity,
+              url: v.file,
+              description: v.message,
+              recommendation: 'Please review and fix this vulnerability',
+              confidence: 0.9,
+              timestamp: new Date(),
+              evidence: {
+                request: { url: v.file, method: 'GET' },
+                response: { status: 200, headers: {}, body: '' },
+                payload: v.code,
+              },
+            })),
+            stepsExecuted: result.scannedFiles,
+            duration: result.duration,
+          }
 
-        const htmlReport = generateHTMLReport(agentResult)
-        const reportPath = join(process.cwd(), `vuln-report-${Date.now()}.html`)
-        writeFileSync(reportPath, htmlReport)
-        logger.info(`HTML report saved to: ${reportPath}`)
+          const htmlReport = generateHTMLReport(agentResult)
+          const legacyReportPath = join(
+            process.cwd(),
+            `vuln-report-${Date.now()}.html`,
+          )
+          writeFileSync(legacyReportPath, htmlReport)
+          logger.info(`HTML report saved to: ${legacyReportPath}`)
+        }
       }
 
       return result
     },
   }
-}
-
-const createCodeAgent = (_options: VulnAgentOptions, _reporters: Reporters) => {
-  const logger = createLogger('agent')
-
-  const analyze = async (_target: string): Promise<AnalysisResult> => {
-    logger.error(
-      'Code analysis mode is temporarily disabled during LLM-native transformation',
-    )
-    logger.info('Please use web mode (-m web) for vulnerability scanning')
-
-    // Return empty result
-    return {
-      vulnerabilities: [],
-      scannedFiles: 0,
-      duration: 0,
-    }
-  }
-
-  return { analyze }
 }
