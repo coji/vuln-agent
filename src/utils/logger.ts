@@ -57,6 +57,16 @@ export const output = {
   error: (message: string) => console.log(`❌ ${message}`),
   scanning: (message: string) => console.log(`🔍 ${message}`),
   found: (message: string) => console.log(`🎯 ${message}`),
+  thinking: (message: string) => process.stdout.write(`🤔 ${message}`),
+  tool: (name: string, params?: string) => {
+    process.stdout.write(`\r🔧 ${name}`)
+    if (params) process.stdout.write(` ${params}`)
+    process.stdout.write('\n')
+  },
+  stream: (chunk: string) => process.stdout.write(chunk),
+  clearLine: () => {
+    process.stdout.write('\r\x1b[K')
+  },
 }
 
 // Progress indicators

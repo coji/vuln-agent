@@ -1,4 +1,4 @@
-import { generateText } from 'ai'
+import { streamText } from 'ai'
 import type {
   ScanSession,
   VulnerabilityFinding,
@@ -48,6 +48,7 @@ export const createVulnAgent = (config: AgentConfig) => {
     const toolsUsed = new Set<string>()
     let strategyUpdates = 0
     let reportPath: string | undefined
+    let currentToolCall: { name: string; params?: string } | null = null
 
     logger.info(`Starting autonomous scan of ${targetUrl}`)
     output.scanning(`Initializing AI agent with ${maxSteps} max steps...`)
@@ -101,8 +102,8 @@ export const createVulnAgent = (config: AgentConfig) => {
       session.state = 'scanning'
       output.scanning('Starting vulnerability scan...')
 
-      // Main agent execution using Vercel AI SDK's maxSteps
-      await generateText({
+      // Main agent execution using Vercel AI SDK's streamText
+      const result = await streamText({
         model: config.llmProvider.model,
         system: `${AGENT_SYSTEM_PROMPT}
 
@@ -116,8 +117,13 @@ export const createVulnAgent = (config: AgentConfig) => {
         onStepFinish: (stepResult) => {
           session.currentStep++
 
+          // Clear any thinking indicator
+          if (currentToolCall) {
+            output.clearLine()
+          }
+
           if (config.verbose) {
-            output.scanning(`Step ${session.currentStep}/${maxSteps}`)
+            output.info(`Step ${session.currentStep}/${maxSteps} completed`)
           }
 
           // Track tool usage
@@ -125,12 +131,13 @@ export const createVulnAgent = (config: AgentConfig) => {
             toolsUsed.add(call.toolName)
             logger.info(`Tool executed: ${call.toolName}`)
 
-            if (config.verbose && call.toolName === 'reportFinding') {
+            // Display finding notifications
+            if (call.toolName === 'reportFinding') {
               const findings = getSessionFindings(sessionId)
               const lastFinding = findings[findings.length - 1]
               if (lastFinding) {
                 output.found(
-                  `Found ${lastFinding.severity} severity ${lastFinding.type}`,
+                  `Found ${lastFinding.severity} severity ${lastFinding.type} vulnerability`,
                 )
               }
             }
@@ -140,10 +147,45 @@ export const createVulnAgent = (config: AgentConfig) => {
             }
           })
 
-          // Note: Context will be provided through the prompt in the next iteration
-          // The AI agent will see the updated state when it makes the next decision
+          currentToolCall = null
         },
       })
+
+      // Stream the AI's reasoning
+      let buffer = ''
+      let isThinking = false
+      
+      for await (const chunk of result.textStream) {
+        // Buffer chunks to detect tool calls
+        buffer += chunk
+        
+        // Detect tool call patterns
+        const toolCallMatch = buffer.match(/(?:Now |Let me |I'll |I will |Next, I'll |I'm going to )?(use|call|execute|run) (?:the )?(\w+)(?: tool)?(?: (?:to|for|with) ([^.]+))?/i)
+        
+        if (toolCallMatch && !currentToolCall) {
+          const toolName = toolCallMatch[2]
+          const purpose = toolCallMatch[3]
+          
+          // Clear thinking indicator
+          if (isThinking) {
+            output.clearLine()
+            isThinking = false
+          }
+          
+          currentToolCall = { name: toolName, params: purpose }
+          output.tool(toolName, purpose)
+          buffer = ''
+        } else if (!currentToolCall && !isThinking && buffer.length > 10) {
+          // Show thinking indicator
+          output.thinking('AI is analyzing...')
+          isThinking = true
+        }
+      }
+
+      // Clear final thinking indicator
+      if (isThinking || currentToolCall) {
+        output.clearLine()
+      }
 
       // Final results
       const finalFindings = getSessionFindings(sessionId)
