@@ -55,6 +55,7 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
       return `${provider.toUpperCase().replace('-', '_')}_API_KEY`
     }
 
+    // Priority: provided apiKey > environment variable
     const apiKey =
       options.llm.apiKey ||
       process.env[getApiKeyEnvName(options.llm.provider)] ||

@@ -5,3 +5,4 @@ tsconfig.tsbuildinfo
 vuln-report-*.html
 .env
 .env.local
+.vulnagentrc.json

@@ -1,385 +1,170 @@
-# 🛡️ VulnAgent - LLM-Native Security Scanner
+# 🛡️ VulnAgent - AI-Powered Web Security Scanner
 
-VulnAgent is a **100% LLM-native** web vulnerability scanner that uses AI to autonomously discover and test security vulnerabilities. Unlike traditional scanners that rely on predefined rules and patterns, VulnAgent leverages the power of Large Language Models to adaptively test web applications.
+VulnAgent uses AI to find security vulnerabilities in web applications. No rules, no patterns - just intelligent analysis.
 
-## 🚀 Features
+## 🚀 Quick Start
 
-- **Fully LLM-Native**: No hardcoded rules or patterns - all vulnerability detection is powered by AI
-- **Autonomous Testing**: AI agent autonomously explores and tests your application with up to 100 intelligent steps
-- **Adaptive Strategy**: Dynamically adjusts testing approach based on discoveries
-- **Comprehensive Coverage**: Tests for XSS, SQL Injection, Authentication issues, and more
-- **Beautiful Reports**: Generates interactive HTML reports with findings and remediation advice
-- **Multi-LLM Support**: Works with OpenAI, Anthropic Claude, and Google Gemini
+```bash
+# 1. Set up your API key (one-time setup)
+npx vuln-agent init --interactive
+
+# 2. Scan any website
+npx vuln-agent scan https://example.com --llm claude-sonnet-4
+```
+
+That's it! VulnAgent will analyze the site and report any vulnerabilities found.
 
 ## 📋 Prerequisites
 
 - Node.js 18+
-- pnpm (recommended) or npm
-- An API key for your preferred LLM provider:
-  - OpenAI API key
-  - Anthropic API key
-  - Google API key (for Gemini)
+- An API key from one of these providers:
+  - [Anthropic](https://console.anthropic.com/) (Claude)
+  - [OpenAI](https://platform.openai.com/)
+  - [Google AI Studio](https://aistudio.google.com/) (Gemini)
 
-## 🛠️ Installation
+## 🎯 Basic Usage
 
-### Quick Start with npx (No Installation Required)
+### Scan a website
 
 ```bash
-# Run directly with npx
 npx vuln-agent scan https://example.com --llm claude-sonnet-4
-
-# Specify a specific version
-npx vuln-agent@latest scan https://example.com --llm claude-sonnet-4
 ```
 
-### Global Installation
+### Scan localhost
 
 ```bash
-# Install globally with npm
-npm install -g vuln-agent
-
-# Or with pnpm
-pnpm add -g vuln-agent
-
-# Then use directly
-vuln-agent scan https://example.com --llm claude-sonnet-4
-```
-
-### Local Development
-
-```bash
-# Clone the repository
-git clone https://github.com/coji/vuln-agent.git
-cd vuln-agent
-
-# Install dependencies
-pnpm install
-
-# Build the project
-pnpm build
-```
-
-#### Running from Source
-
-```bash
-# Set up your API key
-export ANTHROPIC_API_KEY=your-api-key
-
-# Run directly with Node.js
-node dist/src/cli.js scan https://example.com --llm claude-sonnet-4
-
-# Or use npm link for global installation
-npm link
-vuln-agent scan https://example.com --llm claude-sonnet-4
-```
-
-#### Testing Local Applications
-
-```bash
-# Start your local development server (e.g., on port 3000)
-npm run dev  # in your app directory
-
-# In another terminal, scan your local app
-npx vuln-agent scan http://localhost:3000 --llm claude-sonnet-4
-
-# With whitelist for additional security
-npx vuln-agent scan http://localhost:3000 --llm claude-sonnet-4 -w localhost
-
-# Enable verbose mode to see what the AI is doing
-npx vuln-agent scan http://localhost:3000 --llm claude-sonnet-4 -v
-
-# Generate HTML report
-npx vuln-agent scan http://localhost:3000 --llm claude-sonnet-4 -f html
-```
-
-#### Using with Docker Containers
-
-```bash
-# Scan a Docker container running on localhost
-docker run -p 8080:80 my-app
-npx vuln-agent scan http://localhost:8080 --llm claude-sonnet-4
-
-# Scan with custom headers (useful for auth)
-# Note: Custom headers feature coming soon
-```
-
-#### Environment Variables
-
-Create a `.env` file in your project root:
-
-```bash
-# Copy from .env.example
-cp .env.example .env
-
-# Edit .env with your API keys
-ANTHROPIC_API_KEY=sk-ant-...
-# or
-OPENAI_API_KEY=sk-...
-# or
-GOOGLE_GENERATIVE_AI_API_KEY=...
-```
-
-Then run without specifying API keys:
-
-```bash
-# Load environment variables
-source .env  # or use dotenv-cli
-
-# Run scan
 npx vuln-agent scan http://localhost:3000 --llm claude-sonnet-4
 ```
+
+### Generate HTML report
+
+```bash
+npx vuln-agent scan https://example.com --llm claude-sonnet-4 -f html
+```
+
+### See what the AI is doing
+
+```bash
+npx vuln-agent scan https://example.com --llm claude-sonnet-4 --verbose
+```
+
+## 🤖 Supported AI Models
+
+- `claude-sonnet-4` - Anthropic Claude (recommended)
+- `openai-o3` - OpenAI GPT
+- `gemini-2.5-pro` - Google Gemini Pro
+- `gemini-2.5-flash` - Google Gemini Flash (faster, cheaper)
 
 ## 🔧 Configuration
 
-Set your LLM provider API key as an environment variable:
+### First-time setup (recommended)
 
 ```bash
-# For OpenAI
-export OPENAI_API_KEY=your-api-key
-
-# For Anthropic Claude
-export ANTHROPIC_API_KEY=your-api-key
-
-# For Google Gemini
-export GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
+npx vuln-agent init --interactive
 ```
 
-## 🎯 Usage
+This saves your API keys so you don't need to set them every time.
 
-### Basic Web Vulnerability Scan
+### Alternative: Environment variables
 
 ```bash
-# Using npx (no installation required)
+export ANTHROPIC_API_KEY=your-key-here
 npx vuln-agent scan https://example.com --llm claude-sonnet-4
-
-# Or if installed globally
-vuln-agent scan https://example.com --llm claude-sonnet-4
-
-# Available LLM providers:
-# - openai-o3
-# - claude-sonnet-4
-# - gemini-2.5-pro
-# - gemini-2.5-flash
 ```
 
-### Scan Options
+## 📊 Output Formats
+
+- **Console** (default) - Human-readable output in terminal
+- **JSON** (`-f json`) - Machine-readable format for automation
+- **Markdown** (`-f markdown`) - Great for documentation
+- **HTML** (`-f html`) - Interactive report with charts
+
+## 🔍 Command Reference
+
+### `vuln-agent scan`
 
 ```bash
 vuln-agent scan [options] <target>
 
 Options:
-  -f, --format <format>    Output format (console|json|markdown|html) (default: "console")
+  -f, --format <format>    Output format (console|json|markdown|html)
   -l, --llm <provider>     LLM provider (required)
-  -w, --whitelist <hosts>  Allowed hosts for web scanning (comma-separated)
-  -v, --verbose            Show detailed agent actions
-  -d, --debug              Show all debug information
-  -h, --help               Display help
+  -w, --whitelist <hosts>  Allowed hosts (comma-separated)
+  -v, --verbose            Show AI agent actions
+  -d, --debug              Show debug information
 ```
 
-### Output Formats
+### `vuln-agent init`
 
 ```bash
-# Console output (default)
-npx vuln-agent scan https://example.com --llm claude-sonnet-4
+vuln-agent init [options]
 
-# JSON output
-npx vuln-agent scan https://example.com --llm claude-sonnet-4 -f json
-
-# Markdown output
-npx vuln-agent scan https://example.com --llm claude-sonnet-4 -f markdown
-
-# HTML report output
-npx vuln-agent scan https://example.com --llm claude-sonnet-4 -f html
+Options:
+  --interactive            Interactive setup mode
+  --openai-key <key>       Set OpenAI API key
+  --anthropic-key <key>    Set Anthropic API key
+  --google-key <key>       Set Google API key
+  --local                  Save to current directory
+  --global                 Save globally (default)
 ```
 
-### Verbose Mode
+## 🏗️ How It Works
+
+VulnAgent uses AI to:
+
+1. **Explore** - Maps your application structure
+2. **Analyze** - Identifies potential vulnerabilities
+3. **Test** - Generates and tests attack payloads
+4. **Verify** - Confirms findings are real vulnerabilities
+5. **Report** - Provides detailed findings with fixes
+
+The AI adapts its strategy based on what it discovers, making it more effective than rule-based scanners.
+
+## 🛠️ Advanced Usage
+
+### For Developers
 
 ```bash
-# See what the AI agent is doing at each step
-npx vuln-agent scan https://example.com --llm claude-sonnet-4 --verbose
+# Clone and build from source
+git clone https://github.com/coji/vuln-agent.git
+cd vuln-agent
+pnpm install
+pnpm build
+
+# Run from source
+node dist/src/cli.js scan https://example.com --llm claude-sonnet-4
 ```
 
-## 📊 HTML Report
-
-VulnAgent can generate comprehensive HTML reports in two ways:
-
-1. **Automatically**: When vulnerabilities are found (console format only)
-2. **On demand**: Using the `-f html` option
-
-The HTML report includes:
-
-- Visual severity distribution charts
-- Detailed findings with evidence
-- Remediation recommendations
-- Copy-to-markdown functionality
-- Interactive filtering and sorting
-
-The report is saved as `vuln-report-[timestamp].html` in your current directory.
-
-## 🤖 How It Works
-
-VulnAgent uses a revolutionary **LLM-native architecture** with 7 AI-powered tools:
-
-1. **httpRequest** - Sends intelligent HTTP requests to discover endpoints
-2. **analyzeResponse** - Uses AI to analyze responses for vulnerabilities
-3. **extractLinks** - Intelligently extracts and categorizes links and endpoints
-4. **testPayload** - Generates context-aware vulnerability payloads
-5. **reportFinding** - Documents confirmed vulnerabilities with AI analysis
-6. **manageTasks** - AI-driven task prioritization and management
-7. **updateStrategy** - Dynamically adjusts testing strategy based on findings
-
-The AI agent autonomously:
-
-- Maps your application structure
-- Identifies high-value testing targets
-- Generates appropriate test payloads
-- Adapts to defensive measures (WAFs, filters)
-- Provides detailed vulnerability analysis
-
-## 🔍 Example Scan
-
-```bash
-# Scan a test application
-npx vuln-agent scan https://juice-shop.herokuapp.com --llm claude-sonnet-4 --verbose
-
-# Output
-🔍 Initializing AI agent with 100 max steps...
-🔍 Step 1/100
-ℹ️  Agent action: httpRequest - Fetching the target URL to analyze structure
-🔍 Step 2/100
-ℹ️  Agent action: extractLinks - Identifying endpoints and forms
-🔍 Step 3/100
-ℹ️  Agent action: analyzeResponse - Checking for security headers and information disclosure
-...
-✅ Scan completed: 5 vulnerabilities found in 47 steps
-
-# HTML report generated: vuln-report-1234567890.html
-```
-
-## 🏗️ Architecture
-
-VulnAgent represents a paradigm shift in security testing:
-
-- **No Rules, Pure AI**: All vulnerability detection logic is handled by LLMs
-- **Vercel AI SDK**: Built on top of the Vercel AI SDK for robust tool calling
-- **Adaptive Testing**: The agent learns from each response and adjusts its approach
-- **Context-Aware**: Generates payloads specific to the technology stack and defenses
-- **Extensible**: Easy to add new vulnerability types without writing detection rules
-
-### Testing Phases
-
-The AI agent follows a structured approach:
-
-1. **Reconnaissance** (Steps 1-10): Maps application structure and identifies technologies
-2. **Deep Analysis** (Steps 11-40): Tests authentication, forms, and input validation
-3. **Advanced Testing** (Steps 41-70): Attempts sophisticated attacks and filter bypasses
-4. **Verification** (Steps 71-90): Confirms findings and explores attack chains
-5. **Reporting** (Steps 91-100): Finalizes and documents all discoveries
-
-## 🚀 GitHub Actions Integration
-
-You can use VulnAgent in your GitHub Actions workflows to automatically scan for vulnerabilities:
+### GitHub Actions
 
 ```yaml
 name: Security Scan
-on: [push, pull_request]
+on: [push]
 
 jobs:
-  security-scan:
+  scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Run VulnAgent Security Scan
-        uses: coji/vuln-agent@v1
+      - uses: coji/vuln-agent@v1
         with:
           path: 'https://your-staging-site.com'
           llm-provider: 'claude-sonnet-4'
-          format: 'markdown'
-          comment-on-pr: 'true'
-          fail-on-vulnerabilities: 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
 
-### Action Inputs
-
-| Input                     | Description                            | Default      |
-| ------------------------- | -------------------------------------- | ------------ |
-| `path`                    | Path to scan (file, directory, or URL) | `.`          |
-| `llm-provider`            | LLM provider to use                    | _(required)_ |
-| `format`                  | Output format (console/json/markdown)  | `console`    |
-| `fail-on-vulnerabilities` | Fail if vulnerabilities found          | `true`       |
-| `comment-on-pr`           | Comment results on PR                  | `false`      |
-| `upload-results`          | Upload scan results as artifact        | `false`      |
-
-## 🧪 Development
-
-```bash
-# Run tests
-pnpm test
-
-# Run linter
-pnpm lint
-
-# Type checking
-pnpm typecheck
-
-# Run all validations
-pnpm validate
-
-# Format code
-pnpm format:fix
-```
-
-### Project Structure
-
-```text
-vuln-agent/
-├── src/
-│   ├── agent.ts        # AI agent core
-│   ├── cli.ts          # CLI interface
-│   ├── llm.ts          # LLM provider integrations
-│   ├── scanner.ts      # Vulnerability scanner
-│   ├── reporter.ts     # Report generation
-│   ├── tools/          # AI-powered tools
-│   ├── types.ts        # TypeScript types
-│   └── utils.ts        # Utilities
-├── test/               # Test files
-└── docs/               # Documentation
-```
-
 ## ⚠️ Responsible Use
 
-VulnAgent is designed for:
-
-- Testing your own applications
-- Authorized penetration testing
-- Security research with permission
-
-**Never use VulnAgent on systems you don't own or lack permission to test.**
+Only scan websites you own or have permission to test. VulnAgent is a powerful tool that should be used responsibly.
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-Key areas for contribution:
-
-- Additional LLM provider support
-- New vulnerability detection capabilities
-- Performance optimizations
-- Documentation improvements
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Built with [Vercel AI SDK](https://sdk.vercel.ai/)
-- Inspired by the need for adaptive, intelligent security testing
-- Thanks to all contributors and the security community
+MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**Note**: VulnAgent is a powerful tool that should be used responsibly. Always ensure you have proper authorization before testing any system.
+**Questions?** Open an issue at [github.com/coji/vuln-agent](https://github.com/coji/vuln-agent/issues)

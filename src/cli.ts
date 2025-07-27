@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
-import { promises as fs, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { getApiKey, getConfigPath, loadConfig, saveConfig } from './config.js'
 import { createVulnAgent, type VulnAgentOptions } from './index.js'
 import type { LLMProviderType } from './types.js'
 import { debug, enableAllDebug, enableDebug } from './utils.js'
@@ -15,41 +16,98 @@ const packageJson = JSON.parse(
 )
 
 // Init command
-const DEFAULT_CONFIG = `{
-  "mode": "web",
-  "format": "console",
-  "extensions": [".js", ".ts", ".jsx", ".tsx"],
-  "ignore": ["node_modules", ".git", "dist", "build"],
-  "web": {
-    "whitelist": []
-  }
-}
-`
-
 const createInitCommand = () => {
   return new Command('init')
-    .description('Initialize vuln-agent configuration')
-    .option('--force', 'Overwrite existing configuration')
+    .description('Initialize vuln-agent configuration and set API keys')
+    .option('--global', 'Save to global config directory (default)')
+    .option('--local', 'Save to current directory')
+    .option('--openai-key <key>', 'Set OpenAI API key')
+    .option('--anthropic-key <key>', 'Set Anthropic API key')
+    .option('--google-key <key>', 'Set Google API key')
+    .option('--interactive', 'Interactive setup mode')
     .action(async (options) => {
-      const configPath = join(process.cwd(), '.vulnagentrc.json')
+      const isGlobal = !options.local
 
       try {
-        // Check if config already exists
-        if (!options.force) {
-          try {
-            await fs.access(configPath)
-            console.log(
-              'Configuration file already exists. Use --force to overwrite.',
-            )
-            return
-          } catch {
-            // File doesn't exist, proceed
-          }
+        // Load existing config
+        let config = await loadConfig()
+
+        // Update API keys if provided
+        if (!config.apiKeys) {
+          config.apiKeys = {}
         }
 
-        // Write config file
-        await fs.writeFile(configPath, DEFAULT_CONFIG, 'utf-8')
-        console.log('✅ Created .vulnagentrc.json configuration file')
+        if (options.openaiKey) {
+          config.apiKeys.openai = options.openaiKey
+        }
+        if (options.anthropicKey) {
+          config.apiKeys.anthropic = options.anthropicKey
+        }
+        if (options.googleKey) {
+          config.apiKeys.google = options.googleKey
+        }
+
+        // Interactive mode
+        if (options.interactive) {
+          const { default: inquirer } = await import('inquirer')
+
+          console.log('🔧 VulnAgent Configuration Setup\n')
+
+          const answers = await inquirer.prompt([
+            {
+              type: 'password',
+              name: 'openaiKey',
+              message: 'OpenAI API Key (optional):',
+              default: config.apiKeys.openai || '',
+            },
+            {
+              type: 'password',
+              name: 'anthropicKey',
+              message: 'Anthropic API Key (optional):',
+              default: config.apiKeys.anthropic || '',
+            },
+            {
+              type: 'password',
+              name: 'googleKey',
+              message: 'Google API Key (optional):',
+              default: config.apiKeys.google || '',
+            },
+          ])
+
+          if (answers.openaiKey) config.apiKeys.openai = answers.openaiKey
+          if (answers.anthropicKey)
+            config.apiKeys.anthropic = answers.anthropicKey
+          if (answers.googleKey) config.apiKeys.google = answers.googleKey
+        }
+
+        // Save config
+        const savedPath = await saveConfig(config, isGlobal)
+        console.log(`✅ Configuration saved to ${savedPath}`)
+
+        // Show which API keys were configured
+        const configured = []
+        if (config.apiKeys?.openai) configured.push('OpenAI')
+        if (config.apiKeys?.anthropic) configured.push('Anthropic')
+        if (config.apiKeys?.google) configured.push('Google')
+
+        if (configured.length > 0) {
+          console.log(`📝 API keys configured for: ${configured.join(', ')}`)
+        }
+
+        // Show location info
+        if (isGlobal) {
+          console.log(
+            '\n📍 This is your global configuration that will be used for all projects.',
+          )
+          console.log(`   Location: ${getConfigPath(true)}`)
+        } else {
+          console.log(
+            '\n📍 This is a local configuration for this directory only.',
+          )
+          console.log(
+            '⚠️  Remember to add .vulnagentrc.json to your .gitignore file!',
+          )
+        }
       } catch (error) {
         console.error('Error creating configuration:', error)
         process.exit(1)
@@ -99,8 +157,19 @@ const createScanCommand = () => {
 
     if (options.llm) {
       debug.cli('LLM provider specified: %s', options.llm)
+
+      // Load API key from config or environment
+      const apiKey = await getApiKey(options.llm)
+
+      if (apiKey) {
+        debug.cli('API key found for provider: %s', options.llm)
+      } else {
+        debug.cli('No API key found for provider: %s', options.llm)
+      }
+
       vulnAgentOptions.llm = {
         provider: options.llm as LLMProviderType,
+        apiKey: apiKey,
       }
     } else {
       debug.cli('No LLM provider specified')
