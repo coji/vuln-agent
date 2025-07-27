@@ -44,30 +44,6 @@ const createBaseProvider = (
   }
 }
 
-/**
- * Creates a mock LLM provider for testing
- */
-const createMockProvider = (): LLMProvider => {
-  // Create a minimal model for mock purposes
-  const openai = createOpenAI({
-    apiKey: 'mock-key',
-    baseURL: 'https://mock.api',
-  })
-  const model = openai('gpt-4o-mini')
-
-  return {
-    name: 'mock',
-    model,
-    generateObject: async <T>(_params: {
-      prompt: string
-      schema: z.ZodSchema<T>
-    }) => {
-      // Return mock data based on the prompt
-      const mockObject = {} as T
-      return { object: mockObject }
-    },
-  }
-}
 
 /**
  * Creates an LLM provider based on the configuration
@@ -85,10 +61,9 @@ export const createLLM = (config: LLMConfig): LLMProvider => {
   const apiKey = config.apiKey || process.env[envVarName] || ''
 
   if (!apiKey) {
-    console.warn(
-      `No API key provided for ${config.provider} (${envVarName}), using mock provider`,
+    throw new Error(
+      `No API key provided for ${config.provider}. Please set ${envVarName} environment variable or provide it in the config file.`,
     )
-    return createMockProvider()
   }
 
   switch (config.provider) {

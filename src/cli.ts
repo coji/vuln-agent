@@ -298,7 +298,7 @@ const createScanCommand = () => {
       } else {
         debug.cli('No API key found for provider: %s', llmProvider)
         console.error(
-          `\n❌ Error: No API key found for ${llmProvider}. Please run 'vuln-agent init --interactive' to configure.`,
+          `\n❌ Error: No API key found for ${llmProvider}. Please run 'vuln-agent init' to configure.`,
         )
         process.exit(1)
       }
@@ -309,7 +309,7 @@ const createScanCommand = () => {
       }
     } else {
       console.error(
-        "\n❌ Error: No LLM provider specified. Please run 'vuln-agent init --interactive' to set a default provider.",
+        "\n❌ Error: No LLM provider specified. Please run 'vuln-agent init' to set a default provider.",
       )
       process.exit(1)
     }

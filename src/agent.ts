@@ -57,6 +57,7 @@ export const createVulnAgent = (config: AgentConfig) => {
     let strategyUpdates = 0
     let reportPath: string | undefined
     let currentToolCall: { name: string; params?: string } | null = null
+    let isThinking = false
 
     logger.info(`[AGENT] Starting autonomous scan of ${targetUrl}`)
     output.scanning(`Initializing AI agent with ${maxSteps} max steps...`)
@@ -95,16 +96,16 @@ export const createVulnAgent = (config: AgentConfig) => {
       // Initialize task queue
       await tools.manageTasks.execute({
         sessionId,
-        operation: 'add',
-        tasks: [
-          {
-            type: 'recon',
-            priority: 'high',
-            status: 'pending',
-            target: targetUrl,
+        action: 'add',
+        task: {
+          type: 'test_endpoint',
+          priority: 0,
+          status: 'pending',
+          target: targetUrl,
+          metadata: {
             description: 'Initial reconnaissance of target',
           },
-        ],
+        },
       })
 
       session.state = 'scanning'
@@ -119,7 +120,17 @@ export const createVulnAgent = (config: AgentConfig) => {
 - Session ID: ${sessionId}
 - Target URL: ${targetUrl}
 - Max Steps: ${maxSteps}`,
-        prompt: `Begin comprehensive security testing of ${targetUrl}. You have ${maxSteps} steps to find as many vulnerabilities as possible. Start with reconnaissance, then proceed with systematic vulnerability testing.`,
+        prompt: `Begin comprehensive security testing of ${targetUrl}. You have ${maxSteps} steps to find as many vulnerabilities as possible.
+
+Important instructions:
+1. Start by sending an HTTP request to the target URL to gather initial information
+2. Analyze the response to understand the application structure
+3. Extract links and identify potential attack vectors
+4. Test each endpoint systematically for vulnerabilities
+5. Use the manageTasks tool to track your progress, but focus on actually executing the tests
+6. When you find suspicious behavior, investigate it thoroughly and report confirmed vulnerabilities
+
+Remember: Your goal is to FIND and REPORT actual vulnerabilities. Start testing immediately!`,
         maxSteps,
         tools,
         onStepFinish: (stepResult) => {
@@ -163,7 +174,6 @@ export const createVulnAgent = (config: AgentConfig) => {
 
       // Stream the AI's reasoning
       let buffer = ''
-      let isThinking = false
 
       // Use fullStream to get all events
       for await (const chunk of result.fullStream) {
@@ -257,13 +267,38 @@ export const createVulnAgent = (config: AgentConfig) => {
     } catch (error) {
       logger.error('Fatal error during scan:', error)
 
+      // Check for API authentication errors
+      let errorMessage = 'Unknown error'
+      if (error instanceof Error) {
+        errorMessage = error.message
+        
+        // Check for common API authentication errors
+        if (
+          errorMessage.includes('401') ||
+          errorMessage.includes('403') ||
+          errorMessage.includes('Unauthorized') ||
+          errorMessage.includes('Invalid API') ||
+          errorMessage.includes('API key') ||
+          errorMessage.includes('authentication')
+        ) {
+          errorMessage = `Authentication failed: ${errorMessage}. Please check your API key.`
+        }
+      }
+
+      // Clear any remaining UI elements
+      if (isThinking || currentToolCall) {
+        output.clearLine()
+      }
+
+      output.error(`Scan failed: ${errorMessage}`)
+
       return {
         sessionId,
         targetUrl,
         findings: getSessionFindings(sessionId),
         stepsExecuted: session.currentStep,
         duration: Date.now() - startTime,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
         toolsUsed: Array.from(toolsUsed),
         strategy: getSessionStrategy(sessionId),
         strategyUpdates,

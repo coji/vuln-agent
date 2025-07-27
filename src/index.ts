@@ -11,6 +11,18 @@ import {
 import type { AnalysisResult, LLMProviderType, SeverityLevel } from './types.js'
 import { createLogger } from './utils.js'
 
+// Format date as YYYY-MM-DD-HH-mm-ss
+const formatReportDate = (date: Date = new Date()): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+  
+  return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`
+}
+
 interface Reporters {
   consoleReporter: ReturnType<typeof createConsoleReporter>
   jsonReporter: ReturnType<typeof createJsonReporter>
@@ -148,6 +160,7 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
         metadata: {
           agentSteps: agentResult.stepsExecuted,
           completed: !agentResult.error,
+          error: agentResult.error,
           toolsUsed: agentResult.toolsUsed,
           strategy: agentResult.strategy,
           strategyUpdates: agentResult.strategyUpdates,
@@ -167,7 +180,7 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
           }
 
           const htmlReport = generateHTMLReport(agentResult)
-          reportPath = join(process.cwd(), `vuln-report-${Date.now()}.html`)
+          reportPath = join(process.cwd(), `vuln-report-${formatReportDate()}.html`)
           writeFileSync(reportPath, htmlReport)
           logger.info(`HTML report saved to: ${reportPath}`)
         }
@@ -225,7 +238,7 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
           const htmlReport = generateHTMLReport(agentResult)
           const legacyReportPath = join(
             process.cwd(),
-            `vuln-report-${Date.now()}.html`,
+            `vuln-report-${formatReportDate()}.html`,
           )
           writeFileSync(legacyReportPath, htmlReport)
           logger.info(`HTML report saved to: ${legacyReportPath}`)
