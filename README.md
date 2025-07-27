@@ -334,7 +334,7 @@ pnpm format:fix
 
 ### Project Structure
 
-```
+```text
 vuln-agent/
 ├── src/
 │   ├── agent.ts        # AI agent core
