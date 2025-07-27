@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { createHttpClient } from '../../src/infrastructure/http/client.js'
+import { createHttpClient } from '../../src/http-client.js'
 import { createWebVulnerabilityScanner } from '../../src/scanners/web-scanner.js'
 import { createSimpleMockProvider } from '../fixtures/simple-mock-provider.js'
 import type { VulnerableApp } from '../fixtures/vulnerable-app.js'

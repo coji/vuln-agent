@@ -2,7 +2,7 @@ import type {
   HttpClient,
   HttpResponse,
   RequestOptions,
-} from '../../scanners/web-scanner.js'
+} from './scanners/web-scanner.js'
 
 export interface HttpClientConfig {
   rateLimit: {

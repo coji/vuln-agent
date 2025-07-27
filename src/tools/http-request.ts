@@ -1,6 +1,6 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import { createHttpClient } from '../infrastructure/http/client.js'
+import { createHttpClient } from '../http-client.js'
 import type { VulnAgentTool } from '../types.js'
 
 export const createHttpRequestTool = (config: {

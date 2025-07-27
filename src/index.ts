@@ -1,6 +1,6 @@
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { generateHTMLReport } from './infrastructure/storage/html-generator.js'
+import { generateHTMLReport } from './html-generator.js'
 import { createLLM } from './llm.js'
 import {
   createConsoleReporter,

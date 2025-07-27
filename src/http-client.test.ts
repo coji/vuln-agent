@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createHttpClient } from './client.js'
+import { createHttpClient } from './http-client.js'
 
 // Mock fetch
 global.fetch = vi.fn()
