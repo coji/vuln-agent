@@ -30,7 +30,7 @@ const createInitCommand = () => {
 
       try {
         // Load existing config
-        let config = await loadConfig()
+        const config = await loadConfig()
 
         // Update API keys if provided
         if (!config.apiKeys) {

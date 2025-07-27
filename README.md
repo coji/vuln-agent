@@ -135,24 +135,6 @@ pnpm build
 node dist/src/cli.js scan https://example.com --llm claude-sonnet-4
 ```
 
-### GitHub Actions
-
-```yaml
-name: Security Scan
-on: [push]
-
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: coji/vuln-agent@v1
-        with:
-          path: 'https://your-staging-site.com'
-          llm-provider: 'claude-sonnet-4'
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-```
-
 ## ⚠️ Responsible Use
 
 Only scan websites you own or have permission to test. VulnAgent is a powerful tool that should be used responsibly.
