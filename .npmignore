@@ -1,0 +1,28 @@
+# Source files
+src/
+tests/
+
+# Config files
+tsconfig.json
+tsconfig.tsbuildinfo
+vitest.config.ts
+biome.json
+prettier.config.js
+pnpm-workspace.yaml
+
+# Development files
+CLAUDE.md
+CONTRIBUTING.md
+docs/
+examples/
+
+# Generated files
+*.html
+.tmp/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store

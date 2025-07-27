@@ -43,7 +43,7 @@
     "typecheck": "tsc -b",
     "validate": "run-p format lint && run-p typecheck test"
   },
-  "author": "",
+  "author": "coji",
   "packageManager": "pnpm@10.12.4",
   "devDependencies": {
     "@biomejs/biome": "2.1.2",
