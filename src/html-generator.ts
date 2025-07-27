@@ -277,20 +277,6 @@ export const generateHTMLReport = (result: AgentScanResult): string => {
       border-top: 1px solid #e5e7eb;
     }
     
-    .copy-button {
-      background: #3b82f6;
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 0.375rem;
-      cursor: pointer;
-      font-size: 0.875rem;
-      margin-top: 1rem;
-    }
-    
-    .copy-button:hover {
-      background: #2563eb;
-    }
   </style>
 </head>
 <body>
@@ -341,7 +327,6 @@ export const generateHTMLReport = (result: AgentScanResult): string => {
         <strong>Scan Date:</strong> ${new Date().toLocaleString()}
       </p>
       
-      <button class="copy-button" onclick="copyMarkdown()">Copy as Markdown</button>
     </div>
     
     ${
@@ -366,40 +351,6 @@ export const generateHTMLReport = (result: AgentScanResult): string => {
     </footer>
   </div>
   
-  <script>
-    function copyMarkdown() {
-      const markdown = generateMarkdown();
-      navigator.clipboard.writeText(markdown).then(() => {
-        alert('Report copied to clipboard as Markdown!');
-      });
-    }
-    
-    function generateMarkdown() {
-      const result = ${JSON.stringify(result).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026').replace(/'/g, '\\u0027').replace(/"/g, '\\u0022')};
-      let md = '# VulnAgent Security Report\\n\\n';
-      md += '## Summary\\n\\n';
-      md += \`- **Target**: \${result.targetUrl}\\n\`;
-      md += \`- **Total Findings**: \${result.findings.length}\\n\`;
-      md += \`- **AI Steps**: \${result.stepsExecuted}\\n\`;
-      md += \`- **Duration**: \${(result.duration / 1000).toFixed(1)}s\\n\\n\`;
-      
-      if (result.findings.length > 0) {
-        md += '## Findings\\n\\n';
-        result.findings.forEach((finding, i) => {
-          md += \`### \${i + 1}. \${finding.description}\\n\\n\`;
-          md += \`- **Type**: \${finding.type}\\n\`;
-          md += \`- **Severity**: \${finding.severity}\\n\`;
-          md += \`- **URL**: \${finding.url}\\n\`;
-          if (finding.parameter) md += \`- **Parameter**: \${finding.parameter}\\n\`;
-          if (finding.evidence.payload) md += \`- **Payload**: \\\`\${finding.evidence.payload}\\\`\\n\`;
-          md += \`- **Confidence**: \${Math.round(finding.confidence * 100)}%\\n\\n\`;
-          md += \`**Recommendation**: \${finding.recommendation}\\n\\n\`;
-        });
-      }
-      
-      return md;
-    }
-  </script>
 </body>
 </html>`
 }
