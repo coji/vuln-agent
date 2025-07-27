@@ -1,7 +1,7 @@
 import type { z } from 'zod'
 import { createLLM } from '../../llm.js'
 import type { LLMProviderType } from '../../types.js'
-import { debug } from '../../utils/logger.js'
+import { debug } from '../../utils.js'
 import type { LLMProvider as VulnLLMProvider } from './llm-tester.js'
 
 export const createVulnerabilityLLMProvider = (

@@ -1,9 +1,5 @@
 import { streamText } from 'ai'
-import type {
-  ScanSession,
-  VulnerabilityFinding,
-  LLMProvider,
-} from '../types.js'
+import { AGENT_SYSTEM_PROMPT } from './core/agent-prompts.js'
 import {
   createAnalyzeResponseTool,
   createExtractLinksTool,
@@ -14,9 +10,9 @@ import {
   createUpdateStrategyTool,
   getSessionFindings,
   getSessionStrategy,
-} from '../tools/index.js'
-import { createLogger, output } from '../utils/logger.js'
-import { AGENT_SYSTEM_PROMPT } from './agent-prompts.js'
+} from './tools/index.js'
+import type { LLMProvider, ScanSession, VulnerabilityFinding } from './types.js'
+import { createLogger, output } from './utils.js'
 
 export interface AgentConfig {
   llmProvider: LLMProvider
@@ -154,24 +150,26 @@ export const createVulnAgent = (config: AgentConfig) => {
       // Stream the AI's reasoning
       let buffer = ''
       let isThinking = false
-      
+
       for await (const chunk of result.textStream) {
         // Buffer chunks to detect tool calls
         buffer += chunk
-        
+
         // Detect tool call patterns
-        const toolCallMatch = buffer.match(/(?:Now |Let me |I'll |I will |Next, I'll |I'm going to )?(use|call|execute|run) (?:the )?(\w+)(?: tool)?(?: (?:to|for|with) ([^.]+))?/i)
-        
+        const toolCallMatch = buffer.match(
+          /(?:Now |Let me |I'll |I will |Next, I'll |I'm going to )?(use|call|execute|run) (?:the )?(\w+)(?: tool)?(?: (?:to|for|with) ([^.]+))?/i,
+        )
+
         if (toolCallMatch && !currentToolCall) {
           const toolName = toolCallMatch[2]
           const purpose = toolCallMatch[3]
-          
+
           // Clear thinking indicator
           if (isThinking) {
             output.clearLine()
             isThinking = false
           }
-          
+
           currentToolCall = { name: toolName, params: purpose }
           output.tool(toolName, purpose)
           buffer = ''

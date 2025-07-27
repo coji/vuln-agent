@@ -1,6 +1,6 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import type { ScanTask, LLMProvider, VulnAgentTool } from '../types.js'
+import type { LLMProvider, ScanTask, VulnAgentTool } from '../types.js'
 
 // In-memory task store (will be replaced with proper storage later)
 const taskStore = new Map<string, ScanTask[]>()

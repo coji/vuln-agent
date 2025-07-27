@@ -1,6 +1,6 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import type { ScanStrategy, LLMProvider, VulnAgentTool } from '../types.js'
+import type { LLMProvider, ScanStrategy, VulnAgentTool } from '../types.js'
 
 // In-memory strategy store (will be replaced with proper storage later)
 const strategyStore = new Map<string, ScanStrategy>()

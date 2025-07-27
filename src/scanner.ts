@@ -1,16 +1,16 @@
-import { createVulnAgent } from './core/agent.js'
-import type { 
-  AnalysisResult, 
-  HttpResponse, 
-  LLMProvider, 
+import { createVulnAgent } from './agent.js'
+import type {
+  AnalysisResult,
+  HttpResponse,
+  LLMProvider,
   LLMVulnerabilityTester,
+  SeverityLevel,
   VulnerabilityAnalysisResult,
   VulnerabilityAttempt,
   VulnerabilityTestContext,
   VulnerabilityType,
-  SeverityLevel 
 } from './types.js'
-import { createLogger, debug } from './utils/logger.js'
+import { createLogger, debug } from './utils.js'
 
 export interface ScannerOptions {
   whitelist?: string[]
@@ -65,9 +65,12 @@ export const createVulnerabilityDetector = (options: {
     context: VulnerabilityTestContext,
     vulnerabilityType: VulnerabilityType | string,
   ): Promise<VulnerabilityAnalysisResult | null> => {
-    const logger = vulnerabilityType.toLowerCase() === 'xss' ? debug.xss : 
-                   vulnerabilityType.toLowerCase() === 'sqli' ? debug.sqli : 
-                   debug.vulnerability
+    const logger =
+      vulnerabilityType.toLowerCase() === 'xss'
+        ? debug.xss
+        : vulnerabilityType.toLowerCase() === 'sqli'
+          ? debug.sqli
+          : debug.vulnerability
     const attempts: VulnerabilityAttempt[] = []
 
     for (let i = 0; i < maxAttempts; i++) {
@@ -146,12 +149,13 @@ export const createVulnerabilityDetector = (options: {
       logger('Analysis result: %O', analysis)
 
       // Track attempt
-      const attemptResult =
-        analysis.isVulnerable ? analysis.evidence[0]?.type || 'unknown' : 'no_change'
-      
+      const attemptResult = analysis.isVulnerable
+        ? analysis.evidence[0]?.type || 'unknown'
+        : 'no_change'
+
       attempts.push({
         payload,
-        result: attemptResult as any,
+        result: attemptResult as VulnerabilityAttempt['result'],
         response: testResponse,
       })
 
@@ -185,10 +189,11 @@ export const createWebScanner = async (
   const logger = createLogger('web-scanner')
   const { whitelist = [], llm } = options
 
-
   // If no LLM provider, return empty results
   if (!llm?.provider) {
-    logger.warn('No LLM provider configured. Please provide an LLM provider for vulnerability scanning.')
+    logger.warn(
+      'No LLM provider configured. Please provide an LLM provider for vulnerability scanning.',
+    )
     return {
       vulnerabilities: [],
       scannedFiles: 0,

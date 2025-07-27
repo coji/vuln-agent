@@ -6,7 +6,12 @@ import type { z } from 'zod'
 // ========================================
 
 export type SeverityLevel = 'critical' | 'high' | 'medium' | 'low' | 'info'
-export type VulnerabilityType = 'XSS' | 'SQLi' | 'Authentication' | 'Configuration' | 'Other'
+export type VulnerabilityType =
+  | 'XSS'
+  | 'SQLi'
+  | 'Authentication'
+  | 'Configuration'
+  | 'Other'
 
 // ========================================
 // LLM Types
@@ -192,8 +197,8 @@ export interface LLMVulnerabilityTester {
 // ========================================
 
 export interface AnalysisResult {
-  vulnerabilities: Vulnerability[]  // For backward compatibility with reporters
-  findings?: VulnerabilityFinding[]  // For new code
+  vulnerabilities: Vulnerability[] // For backward compatibility with reporters
+  findings?: VulnerabilityFinding[] // For new code
   scannedFiles: number
   duration: number
   summary?: {

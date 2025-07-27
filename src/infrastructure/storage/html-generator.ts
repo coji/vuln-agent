@@ -1,4 +1,4 @@
-import type { AgentScanResult } from '../../core/agent.js'
+import type { AgentScanResult } from '../../agent.js'
 
 export const generateHTMLReport = (result: AgentScanResult): string => {
   const severityColors = {

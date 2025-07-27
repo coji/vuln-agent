@@ -23,7 +23,7 @@
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "vuln-agent": "./dist/cli/index.js"
+    "vuln-agent": "./dist/cli.js"
   },
   "scripts": {
     "build": "tsc",

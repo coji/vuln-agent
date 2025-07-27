@@ -1,5 +1,3 @@
-import { debug } from '../../utils/logger.js'
-import type { HttpClient } from '../web-scanner.js'
 import type {
   HttpResponse,
   LLMVulnerabilityTester,
@@ -7,6 +5,8 @@ import type {
   VulnerabilityAttempt,
   VulnerabilityTestContext,
 } from '../../types.js'
+import { debug } from '../../utils.js'
+import type { HttpClient } from '../web-scanner.js'
 
 export interface SQLiDetectorOptions {
   httpClient: HttpClient

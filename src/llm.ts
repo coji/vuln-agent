@@ -59,7 +59,10 @@ const createMockProvider = (): LLMProvider => {
  * Creates an LLM provider based on the configuration
  */
 export const createLLM = (config: LLMConfig): LLMProvider => {
-  const apiKey = config.apiKey || process.env[`${config.provider.replace('-', '_').toUpperCase()}_API_KEY`] || ''
+  const apiKey =
+    config.apiKey ||
+    process.env[`${config.provider.replace('-', '_').toUpperCase()}_API_KEY`] ||
+    ''
 
   if (!apiKey) {
     console.warn(

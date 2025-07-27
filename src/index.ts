@@ -1,14 +1,15 @@
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type { AnalysisResult } from './types.js'
 import { generateHTMLReport } from './infrastructure/storage/html-generator.js'
 import { createLLMProvider } from './llm.js'
-import type { LLMProviderType } from './types.js'
-import { createConsoleReporter } from './reporters/console-reporter.js'
-import { createJsonReporter } from './reporters/json-reporter.js'
-import { createMarkdownReporter } from './reporters/markdown-reporter.js'
+import {
+  createConsoleReporter,
+  createJsonReporter,
+  createMarkdownReporter,
+} from './reporter.js'
 import { createWebScanner } from './scanner.js'
-import { createLogger } from './utils/logger.js'
+import type { AnalysisResult, LLMProviderType } from './types.js'
+import { createLogger } from './utils.js'
 
 interface Reporters {
   consoleReporter: ReturnType<typeof createConsoleReporter>
