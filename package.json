@@ -20,6 +20,7 @@
   "bugs": {
     "url": "https://github.com/coji/vuln-agent/issues"
   },
+  "license": "MIT",
   "main": "dist/index.js",
   "type": "module",
   "bin": {
@@ -37,7 +38,6 @@
     "validate": "run-p format lint && run-p typecheck test"
   },
   "author": "",
-  "license": "ISC",
   "packageManager": "pnpm@10.12.4",
   "devDependencies": {
     "@biomejs/biome": "2.1.2",

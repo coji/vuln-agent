@@ -19,7 +19,7 @@ export type VulnerabilityType =
 
 export type LLMProviderType =
   | 'openai-o3'
-  | 'anthropic-sonnet4'
+  | 'claude-sonnet-4'
   | 'gemini-2.5-pro'
   | 'gemini-2.5-flash'
 

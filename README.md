@@ -46,7 +46,7 @@ export OPENAI_API_KEY=your-api-key
 export ANTHROPIC_API_KEY=your-api-key
 
 # For Google Gemini
-export GOOGLE_API_KEY=your-api-key
+export GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
 ```
 
 ## 🎯 Usage
@@ -55,11 +55,11 @@ export GOOGLE_API_KEY=your-api-key
 
 ```bash
 # Scan a website with your preferred LLM
-node dist/src/cli/index.js scan https://example.com --llm anthropic-sonnet4
+node dist/src/cli.js scan https://example.com --llm claude-sonnet-4
 
 # Available LLM providers:
 # - openai-o3
-# - anthropic-sonnet4
+# - claude-sonnet-4
 # - gemini-2.5-pro
 # - gemini-2.5-flash
 ```
@@ -83,20 +83,20 @@ Options:
 
 ```bash
 # Console output (default)
-node dist/src/cli/index.js scan https://example.com --llm anthropic-sonnet4
+node dist/src/cli.js scan https://example.com --llm claude-sonnet-4
 
 # JSON output
-node dist/src/cli/index.js scan https://example.com --llm anthropic-sonnet4 -f json
+node dist/src/cli.js scan https://example.com --llm claude-sonnet-4 -f json
 
 # Markdown output
-node dist/src/cli/index.js scan https://example.com --llm anthropic-sonnet4 -f markdown
+node dist/src/cli.js scan https://example.com --llm claude-sonnet-4 -f markdown
 ```
 
 ### Verbose Mode
 
 ```bash
 # See what the AI agent is doing at each step
-node dist/src/cli/index.js scan https://example.com --llm anthropic-sonnet4 --verbose
+node dist/src/cli.js scan https://example.com --llm claude-sonnet-4 --verbose
 ```
 
 ## 📊 HTML Report
@@ -134,7 +134,7 @@ The AI agent autonomously:
 
 ```bash
 # Scan a test application
-node dist/src/cli/index.js scan https://juice-shop.herokuapp.com --llm anthropic-sonnet4 --verbose
+node dist/src/cli.js scan https://juice-shop.herokuapp.com --llm claude-sonnet-4 --verbose
 
 # Output
 🔍 Initializing AI agent with 100 max steps...
@@ -194,12 +194,14 @@ pnpm format:fix
 ```
 vuln-agent/
 ├── src/
-│   ├── core/           # Agent core and prompts
+│   ├── agent.ts        # AI agent core
+│   ├── cli.ts          # CLI interface
+│   ├── llm.ts          # LLM provider integrations
+│   ├── scanner.ts      # Vulnerability scanner
+│   ├── reporter.ts     # Report generation
 │   ├── tools/          # AI-powered tools
-│   ├── domain/         # Domain models
-│   ├── scanners/       # Scanner implementations
-│   ├── llm/            # LLM provider integrations
-│   └── cli/            # CLI interface
+│   ├── types.ts        # TypeScript types
+│   └── utils.ts        # Utilities
 ├── test/               # Test files
 └── docs/               # Documentation
 ```
@@ -227,7 +229,7 @@ Key areas for contribution:
 
 ## 📄 License
 
-This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 

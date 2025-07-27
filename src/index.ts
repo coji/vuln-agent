@@ -63,8 +63,9 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
     // Map provider type to API key environment variable
     const getApiKeyEnvName = (provider: string) => {
       if (provider.startsWith('openai')) return 'OPENAI_API_KEY'
+      if (provider.startsWith('claude')) return 'ANTHROPIC_API_KEY'
       if (provider.startsWith('anthropic')) return 'ANTHROPIC_API_KEY'
-      if (provider.startsWith('gemini')) return 'GOOGLE_API_KEY'
+      if (provider.startsWith('gemini')) return 'GOOGLE_GENERATIVE_AI_API_KEY'
       return `${provider.toUpperCase().replace('-', '_')}_API_KEY`
     }
 

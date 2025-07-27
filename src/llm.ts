@@ -59,23 +59,29 @@ const createMockProvider = (): LLMProvider => {
  * Creates an LLM provider based on the configuration
  */
 export const createLLM = (config: LLMConfig): LLMProvider => {
-  const apiKey =
-    config.apiKey ||
-    process.env[`${config.provider.replace('-', '_').toUpperCase()}_API_KEY`] ||
-    ''
+  // Map provider to correct environment variable name
+  const envVarMap: Record<string, string> = {
+    'claude-sonnet-4': 'ANTHROPIC_API_KEY',
+    'openai-o3': 'OPENAI_API_KEY',
+    'gemini-2.5-pro': 'GOOGLE_GENERATIVE_AI_API_KEY',
+    'gemini-2.5-flash': 'GOOGLE_GENERATIVE_AI_API_KEY',
+  }
+
+  const envVarName = envVarMap[config.provider]
+  const apiKey = config.apiKey || process.env[envVarName] || ''
 
   if (!apiKey) {
     console.warn(
-      `No API key provided for ${config.provider}, using mock provider`,
+      `No API key provided for ${config.provider} (${envVarName}), using mock provider`,
     )
     return createMockProvider()
   }
 
   switch (config.provider) {
-    case 'anthropic-sonnet4': {
+    case 'claude-sonnet-4': {
       const anthropic = createAnthropic({ apiKey })
       const model = anthropic('claude-sonnet-4-20250514')
-      return createBaseProvider('Anthropic Sonnet 4', model)
+      return createBaseProvider('Claude Sonnet 4', model)
     }
 
     case 'openai-o3': {
