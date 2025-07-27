@@ -13,7 +13,7 @@ inputs:
     default: '.'
 
   llm-provider:
-    description: 'LLM provider to use (openai-o3, anthropic-sonnet4, gemini-2.5-pro, gemini-2.5-flash)'
+    description: 'LLM provider to use (openai-o3, claude-sonnet-4, gemini-2.5-pro, gemini-2.5-flash)'
     required: false
     default: ''
 
@@ -71,10 +71,9 @@ runs:
       id: scan
       shell: bash
       env:
-        OPENAI_O3_API_KEY: ${{ env.OPENAI_O3_API_KEY }}
-        ANTHROPIC_SONNET4_API_KEY: ${{ env.ANTHROPIC_SONNET4_API_KEY }}
-        GEMINI_2_5_PRO_API_KEY: ${{ env.GEMINI_2_5_PRO_API_KEY }}
-        GEMINI_2_5_FLASH_API_KEY: ${{ env.GEMINI_2_5_FLASH_API_KEY }}
+        OPENAI_API_KEY: ${{ env.OPENAI_API_KEY }}
+        ANTHROPIC_API_KEY: ${{ env.ANTHROPIC_API_KEY }}
+        GOOGLE_GENERATIVE_AI_API_KEY: ${{ env.GOOGLE_GENERATIVE_AI_API_KEY }}
         GITHUB_TOKEN: ${{ github.token }}
       run: |
         # Build command

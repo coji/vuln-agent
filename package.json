@@ -21,10 +21,10 @@
     "url": "https://github.com/coji/vuln-agent/issues"
   },
   "license": "MIT",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "type": "module",
   "bin": {
-    "vuln-agent": "./dist/cli.js"
+    "vuln-agent": "./dist/src/cli.js"
   },
   "scripts": {
     "build": "tsc",

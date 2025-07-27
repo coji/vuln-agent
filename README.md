@@ -170,6 +170,43 @@ The AI agent follows a structured approach:
 4. **Verification** (Steps 71-90): Confirms findings and explores attack chains
 5. **Reporting** (Steps 91-100): Finalizes and documents all discoveries
 
+## 🚀 GitHub Actions Integration
+
+You can use VulnAgent in your GitHub Actions workflows to automatically scan for vulnerabilities:
+
+```yaml
+name: Security Scan
+on: [push, pull_request]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run VulnAgent Security Scan
+        uses: coji/vuln-agent@v1
+        with:
+          path: 'https://your-staging-site.com'
+          llm-provider: 'claude-sonnet-4'
+          format: 'markdown'
+          comment-on-pr: 'true'
+          fail-on-vulnerabilities: 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+```
+
+### Action Inputs
+
+| Input | Description | Default |
+|-------|-------------|---------|
+| `path` | Path to scan (file, directory, or URL) | `.` |
+| `llm-provider` | LLM provider to use | _(required)_ |
+| `format` | Output format (console/json/markdown) | `console` |
+| `fail-on-vulnerabilities` | Fail if vulnerabilities found | `true` |
+| `comment-on-pr` | Comment results on PR | `false` |
+| `upload-results` | Upload scan results as artifact | `false` |
+
 ## 🧪 Development
 
 ```bash
