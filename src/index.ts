@@ -7,7 +7,7 @@ import type { LLMProviderType } from './llm/types.js'
 import { createConsoleReporter } from './reporters/console-reporter.js'
 import { createJsonReporter } from './reporters/json-reporter.js'
 import { createMarkdownReporter } from './reporters/markdown-reporter.js'
-import { createVulnerabilityLLMProvider } from './scanners/vulnerabilities/llm-adapter.js'
+import { createLLMProvider } from './llm/index.js'
 import { createWebVulnerabilityScanner } from './scanners/web-scanner.js'
 import { createLogger } from './utils/logger.js'
 
@@ -81,10 +81,10 @@ const createWebAgent = (options: VulnAgentOptions, reporters: Reporters) => {
 
     if (apiKey) {
       logger.info(`Using LLM provider: ${options.llm.provider}`)
-      vulnLLMProvider = createVulnerabilityLLMProvider(
-        options.llm.provider,
+      vulnLLMProvider = createLLMProvider({
+        provider: options.llm.provider,
         apiKey,
-      )
+      })
     } else {
       logger.warn(
         `No API key found for ${options.llm.provider}. Set ${getApiKeyEnvName(options.llm.provider)} environment variable.`,

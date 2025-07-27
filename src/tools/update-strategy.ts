@@ -1,7 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import type { ScanStrategy } from '../domain/models/scan-session.js'
-import type { LLMProvider } from '../scanners/vulnerabilities/llm-tester.js'
+import type { LLMProvider } from '../llm/types.js'
 import type { VulnAgentTool } from './types.js'
 
 // In-memory strategy store (will be replaced with proper storage later)

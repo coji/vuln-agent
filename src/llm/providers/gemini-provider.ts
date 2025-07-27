@@ -29,5 +29,5 @@ export const createGeminiProvider = (config: LLMConfig): LLMProvider => {
     return text
   }
 
-  return createBaseProvider(`Gemini ${config.provider}`, makeRequest)
+  return createBaseProvider(`Gemini ${config.provider}`, model, makeRequest)
 }

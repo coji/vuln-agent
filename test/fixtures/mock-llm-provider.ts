@@ -1,4 +1,5 @@
-import type { LLMProvider } from '../../src/scanners/vulnerabilities/llm-tester.js'
+import { createMockProvider } from '../../src/llm/providers/mock-provider.js'
+import type { LLMProvider } from '../../src/llm/types.js'
 
 export interface MockLLMProviderOptions {
   // Allow customizing responses for specific tests
@@ -19,7 +20,11 @@ export const createMockLLMProvider = (
   const discoveredEndpoints: string[] = []
   const testedEndpoints: string[] = []
 
+  // Get base mock provider
+  const baseProvider = createMockProvider()
+
   return {
+    ...baseProvider,
     generateObject: async <T>({
       prompt,
     }: {

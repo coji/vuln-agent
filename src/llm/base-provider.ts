@@ -32,16 +32,33 @@ export const parseAnalysisResponse = (
   }
 }
 
+import { generateObject } from 'ai'
+import type { LanguageModelV1 } from 'ai'
+import type { z } from 'zod'
+
 export const createBaseProvider = (
   name: string,
+  model: LanguageModelV1,
   makeRequest: (prompt: string) => Promise<string>,
 ): LLMProvider => {
   return {
     name,
+    model,
     analyze: async (code: string, context?: string) => {
       const prompt = formatPrompt(code, context)
       const response = await makeRequest(prompt)
       return parseAnalysisResponse(response)
+    },
+    generateObject: async <T>(params: {
+      prompt: string
+      schema: z.ZodSchema<T>
+    }) => {
+      const result = await generateObject({
+        model,
+        prompt: params.prompt,
+        schema: params.schema,
+      })
+      return { object: result.object }
     },
   }
 }

@@ -1,6 +1,6 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import type { LLMProvider } from '../scanners/vulnerabilities/llm-tester.js'
+import type { LLMProvider } from '../llm/types.js'
 import type { VulnAgentTool } from './types.js'
 
 export const createExtractLinksTool = (llm: LLMProvider): VulnAgentTool => {

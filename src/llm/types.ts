@@ -1,6 +1,14 @@
+import type { LanguageModelV1 } from 'ai'
+import type { z } from 'zod'
+
 export interface LLMProvider {
   name: string
+  model: LanguageModelV1
   analyze: (code: string, context?: string) => Promise<VulnerabilityAnalysis>
+  generateObject: <T>(params: {
+    prompt: string
+    schema: z.ZodSchema<T>
+  }) => Promise<{ object: T }>
 }
 
 export interface VulnerabilityAnalysis {

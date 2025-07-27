@@ -20,5 +20,5 @@ export const createOpenAIProvider = (config: LLMConfig): LLMProvider => {
     return text
   }
 
-  return createBaseProvider('OpenAI o3', makeRequest)
+  return createBaseProvider('OpenAI o3', model, makeRequest)
 }

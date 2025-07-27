@@ -1,9 +1,9 @@
-import { z } from 'zod'
+import { generateText } from 'ai'
 import type {
   ScanSession,
   VulnerabilityFinding,
 } from '../domain/models/scan-session.js'
-import type { LLMProvider } from '../scanners/vulnerabilities/llm-tester.js'
+import type { LLMProvider } from '../llm/types.js'
 import {
   createAnalyzeResponseTool,
   createExtractLinksTool,
@@ -14,11 +14,9 @@ import {
   createUpdateStrategyTool,
   getSessionFindings,
   getSessionStrategy,
-  getSessionTasks,
-  type VulnAgentTool,
 } from '../tools/index.js'
 import { createLogger, output } from '../utils/logger.js'
-import { AGENT_SYSTEM_PROMPT, STEP_CONTEXT_TEMPLATE } from './agent-prompts.js'
+import { AGENT_SYSTEM_PROMPT } from './agent-prompts.js'
 
 export interface AgentConfig {
   llmProvider: LLMProvider
@@ -44,20 +42,9 @@ export const createVulnAgent = (config: AgentConfig) => {
   const logger = createLogger('agent')
   const maxSteps = config.maxSteps || 100
 
-  // Initialize all tools
-  const tools: VulnAgentTool[] = [
-    createHttpRequestTool({ whitelist: config.whitelist }),
-    createAnalyzeResponseTool(config.llmProvider),
-    createExtractLinksTool(config.llmProvider),
-    createTestPayloadTool(config.llmProvider),
-    createReportFindingTool(),
-    createManageTasksTool(config.llmProvider),
-    createUpdateStrategyTool(config.llmProvider),
-  ]
-
   const scan = async (targetUrl: string): Promise<AgentScanResult> => {
+    const sessionId = `scan-${Date.now()}`
     const startTime = Date.now()
-    const sessionId = `scan-${Date.now()}-${Math.random().toString(36).substring(7)}`
     const toolsUsed = new Set<string>()
     let strategyUpdates = 0
     let reportPath: string | undefined
@@ -84,139 +71,78 @@ export const createVulnAgent = (config: AgentConfig) => {
     }
 
     try {
-      // System prompt for the agent
-      const systemPrompt = `${AGENT_SYSTEM_PROMPT}
+      // Initialize all tools as AI SDK tools
+      const tools = {
+        httpRequest: createHttpRequestTool({ whitelist: config.whitelist }).tool,
+        analyzeResponse: createAnalyzeResponseTool(config.llmProvider).tool,
+        extractLinks: createExtractLinksTool(config.llmProvider).tool,
+        testPayload: createTestPayloadTool(config.llmProvider).tool,
+        reportFinding: createReportFindingTool().tool,
+        manageTasks: createManageTasksTool(config.llmProvider).tool,
+        updateStrategy: createUpdateStrategyTool(config.llmProvider).tool,
+      }
+
+      // Initialize task queue
+      await tools.manageTasks.execute({
+        sessionId,
+        operation: 'add',
+        tasks: [
+          {
+            type: 'recon',
+            priority: 'high',
+            status: 'pending',
+            target: targetUrl,
+            description: 'Initial reconnaissance of target',
+          },
+        ],
+      })
+
+      session.state = 'scanning'
+      output.scanning('Starting vulnerability scan...')
+
+      // Main agent execution using Vercel AI SDK's maxSteps
+      await generateText({
+        model: config.llmProvider.model,
+        system: `${AGENT_SYSTEM_PROMPT}
 
 ## Session Details
 - Session ID: ${sessionId}
 - Target URL: ${targetUrl}
-- Max Steps: ${maxSteps}`
+- Max Steps: ${maxSteps}`,
+        prompt: `Begin comprehensive security testing of ${targetUrl}. You have ${maxSteps} steps to find as many vulnerabilities as possible. Start with reconnaissance, then proceed with systematic vulnerability testing.`,
+        maxSteps,
+        tools,
+        onStepFinish: (stepResult) => {
+          session.currentStep++
+          
+          if (config.verbose) {
+            output.scanning(`Step ${session.currentStep}/${maxSteps}`)
+          }
 
-      // Initialize with first task
-      const manageTasksTool = tools.find((t) => t.name === 'manageTasks')
-      if (manageTasksTool) {
-        await manageTasksTool.tool.execute({
-          sessionId,
-          action: 'add',
-          task: {
-            type: 'test_endpoint',
-            target: targetUrl,
-            priority: 0,
-          },
-        })
-      }
-
-      // Main agent loop
-      for (let step = 0; step < maxSteps; step++) {
-        session.currentStep = step
-
-        if (config.verbose) {
-          output.scanning(`Step ${step + 1}/${maxSteps}`)
-        }
-
-        // Get current state
-        const tasks = getSessionTasks(sessionId)
-        const findings = getSessionFindings(sessionId)
-        const strategy = getSessionStrategy(sessionId)
-
-        const pendingTasks = tasks.filter((t) => t.status === 'pending')
-
-        // Check if we're done
-        if (pendingTasks.length === 0 && step > 5) {
-          logger.info('No more pending tasks, completing scan')
-          break
-        }
-
-        // Prepare context for the agent
-        const completedEndpoints = tasks
-          .filter((t) => t.status === 'completed')
-          .map((t) => t.target)
-          .slice(-5)
-
-        const contextPrompt = STEP_CONTEXT_TEMPLATE(
-          step + 1,
-          maxSteps,
-          findings.length,
-          findings.filter(
-            (f) => f.severity === 'critical' || f.severity === 'high',
-          ).length,
-          pendingTasks.length,
-          completedEndpoints,
-          strategy?.focusAreas.join(', ') || 'General reconnaissance',
-          pendingTasks.slice(0, 3).map((t) => `${t.type}: ${t.target}`),
-        )
-
-        try {
-          // Let the agent decide the next action using LLM
-          const agentPrompt = `${systemPrompt}
-
-${contextPrompt}
-
-Choose the most appropriate tool and provide the parameters as JSON.`
-
-          const response = await config.llmProvider.generateObject({
-            prompt: agentPrompt,
-            schema: z.object({
-              tool: z.string().describe('The tool name to use'),
-              parameters: z.any().describe('The parameters for the tool'),
-              reasoning: z
-                .string()
-                .describe('Why this tool and parameters were chosen'),
-            }),
-          })
-
-          // Execute the chosen tool
-          const chosenTool = tools.find((t) => t.name === response.object.tool)
-          if (chosenTool) {
-            toolsUsed.add(response.object.tool)
-
-            if (config.verbose) {
-              logger.debug(
-                `Agent action: ${response.object.tool} - ${response.object.reasoning}`,
-              )
+          // Track tool usage
+          stepResult.toolCalls.forEach((call) => {
+            toolsUsed.add(call.toolName)
+            logger.info(`Tool executed: ${call.toolName}`)
+            
+            if (config.verbose && call.toolName === 'reportFinding') {
+              const findings = getSessionFindings(sessionId)
+              const lastFinding = findings[findings.length - 1]
+              if (lastFinding) {
+                output.found(
+                  `Found ${lastFinding.severity} severity ${lastFinding.type}`,
+                )
+              }
             }
 
-            // Track strategy updates
-            if (response.object.tool === 'updateStrategy') {
+            if (call.toolName === 'updateStrategy') {
               strategyUpdates++
             }
+          })
 
-            try {
-              await chosenTool.tool.execute(response.object.parameters)
-            } catch (toolError) {
-              logger.error(`Tool execution error: ${toolError}`)
-            }
-          }
-
-          // Update strategy periodically
-          if (step > 0 && step % 20 === 0) {
-            const updateStrategyTool = tools.find(
-              (t) => t.name === 'updateStrategy',
-            )
-            if (updateStrategyTool) {
-              await updateStrategyTool.tool.execute({
-                sessionId,
-                currentState: {
-                  completedSteps: step,
-                  remainingSteps: maxSteps - step,
-                  findings: findings.map((f) => ({
-                    type: f.type,
-                    severity: f.severity,
-                    target: f.url,
-                  })),
-                  testedEndpoints: tasks
-                    .filter((t) => t.status === 'completed')
-                    .map((t) => t.target),
-                  discoveredEndpoints: tasks.map((t) => t.target),
-                },
-              })
-            }
-          }
-        } catch (error) {
-          logger.error(`Error in step ${step + 1}: ${error}`)
-          // Continue to next step on error
-        }
-      }
+          // Note: Context will be provided through the prompt in the next iteration
+          // The AI agent will see the updated state when it makes the next decision
+        },
+      })
 
       // Final results
       const finalFindings = getSessionFindings(sessionId)
@@ -224,7 +150,7 @@ Choose the most appropriate tool and provide the parameters as JSON.`
       session.state = 'completed'
       session.findings = finalFindings
 
-      const result: AgentScanResult = {
+      const agentResult: AgentScanResult = {
         sessionId,
         targetUrl,
         findings: finalFindings,
@@ -237,10 +163,10 @@ Choose the most appropriate tool and provide the parameters as JSON.`
       }
 
       output.success(
-        `Scan completed: ${finalFindings.length} vulnerabilities found in ${result.stepsExecuted} steps`,
+        `Scan completed: ${finalFindings.length} vulnerabilities found in ${agentResult.stepsExecuted} steps`,
       )
 
-      return result
+      return agentResult
     } catch (error) {
       logger.error('Fatal error during scan:', error)
 

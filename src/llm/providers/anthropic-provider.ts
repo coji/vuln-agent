@@ -20,5 +20,5 @@ export const createAnthropicProvider = (config: LLMConfig): LLMProvider => {
     return text
   }
 
-  return createBaseProvider('Anthropic Sonnet 4', makeRequest)
+  return createBaseProvider('Anthropic Sonnet 4', model, makeRequest)
 }
