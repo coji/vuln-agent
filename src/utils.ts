@@ -81,3 +81,51 @@ export const progress = {
     process.stdout.write(' ✗\n')
   },
 }
+
+// Utility functions
+export const parseUrl = (url: string): URL | null => {
+  try {
+    return new URL(url)
+  } catch {
+    return null
+  }
+}
+
+export const formatDuration = (ms: number): string => {
+  if (ms < 1000) {
+    return `${(ms / 1000).toFixed(2)}s`
+  }
+  const seconds = Math.floor(ms / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  if (minutes > 0) {
+    return `${minutes}m ${remainingSeconds}s`
+  }
+  return `${seconds}.00s`
+}
+
+export const sanitizeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+}
+
+export const calculateSeverityScore = (severity: string): number => {
+  switch (severity) {
+    case 'critical':
+      return 10
+    case 'high':
+      return 8
+    case 'medium':
+      return 5
+    case 'low':
+      return 3
+    case 'info':
+      return 1
+    default:
+      return 0
+  }
+}

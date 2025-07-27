@@ -6,9 +6,8 @@ export interface VulnAgentConfig {
   format?: string
   defaultLLM?: string
   maxSteps?: number
-  web?: {
-    whitelist?: string[]
-  }
+  timeout?: number
+  whitelist?: string[]
   apiKeys?: {
     openai?: string
     anthropic?: string
@@ -69,29 +68,38 @@ export const ensureGlobalConfigDir = async (): Promise<void> => {
  * Load configuration from all sources with proper precedence
  * Priority: local > global > defaults
  */
-export const loadConfig = async (): Promise<VulnAgentConfig> => {
-  const defaultConfig: VulnAgentConfig = {
-    format: 'console',
-    defaultLLM: '',
-    maxSteps: 100,
-    web: {
-      whitelist: [],
-    },
-    apiKeys: {
-      openai: '',
-      anthropic: '',
-      google: '',
-    },
-  }
-
+export const loadConfig = async (
+  filePath?: string,
+): Promise<Required<VulnAgentConfig>> => {
+  const defaultConfig = createDefaultConfig()
   let config = { ...defaultConfig }
+
+  // If specific file path provided, only load from that file
+  if (filePath) {
+    try {
+      const fileConfig = JSON.parse(await fs.readFile(filePath, 'utf-8'))
+      // Deep merge the configurations
+      config = {
+        ...config,
+        ...fileConfig,
+        apiKeys: { ...config.apiKeys, ...(fileConfig.apiKeys || {}) },
+      }
+    } catch {
+      // File doesn't exist or is invalid, return defaults
+    }
+    return config
+  }
 
   // Try to load global config
   try {
     const globalConfig = JSON.parse(
       await fs.readFile(getGlobalConfigPath(), 'utf-8'),
     )
-    config = { ...config, ...globalConfig }
+    config = {
+      ...config,
+      ...globalConfig,
+      apiKeys: { ...config.apiKeys, ...(globalConfig.apiKeys || {}) },
+    }
   } catch {
     // Global config doesn't exist, that's okay
   }
@@ -101,7 +109,11 @@ export const loadConfig = async (): Promise<VulnAgentConfig> => {
     const localConfig = JSON.parse(
       await fs.readFile(getLocalConfigPath(), 'utf-8'),
     )
-    config = { ...config, ...localConfig }
+    config = {
+      ...config,
+      ...localConfig,
+      apiKeys: { ...config.apiKeys, ...(localConfig.apiKeys || {}) },
+    }
   } catch {
     // Local config doesn't exist, that's okay
   }
@@ -162,4 +174,22 @@ export const getApiKey = async (
   }
 
   return undefined
+}
+
+/**
+ * Create default configuration
+ */
+export const createDefaultConfig = (): Required<VulnAgentConfig> => {
+  return {
+    format: 'console',
+    defaultLLM: 'openai-o3',
+    maxSteps: 100,
+    timeout: 30000,
+    whitelist: [],
+    apiKeys: {
+      openai: '',
+      anthropic: '',
+      google: '',
+    },
+  }
 }

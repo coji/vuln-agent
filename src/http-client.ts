@@ -13,12 +13,12 @@ export interface RequestOptions {
 }
 
 export interface HttpClientConfig {
-  rateLimit: {
+  rateLimit?: {
     maxRequests: number
     windowMs: number
   }
   timeout: number
-  retries: number
+  retries?: number
   whitelist: string[]
 }
 
@@ -115,7 +115,9 @@ const retryWithBackoff = async <T>(
 }
 
 export const createHttpClient = (config: HttpClientConfig): HttpClient => {
-  const rateLimiter = createRateLimiter(config.rateLimit)
+  const rateLimiter = config.rateLimit
+    ? createRateLimiter(config.rateLimit)
+    : { throttle: async () => {} }
 
   const request = async (options: RequestOptions): Promise<HttpResponse> => {
     debug.http('HTTP request: %s %s', options.method || 'GET', options.url)
@@ -174,7 +176,7 @@ export const createHttpClient = (config: HttpClientConfig): HttpClient => {
         }
         throw error
       }
-    }, config.retries)
+    }, config.retries || 3)
   }
 
   return { request }

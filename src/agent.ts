@@ -165,7 +165,7 @@ Remember: Your goal is to FIND and REPORT actual vulnerabilities. Start testing 
               strategyUpdates++
             }
 
-            displayToolCall(call, output, sessionId, { strategyUpdates })
+            displayToolCall(call, output, sessionId)
           })
 
           currentToolCall = null

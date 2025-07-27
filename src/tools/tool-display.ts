@@ -41,12 +41,36 @@ interface ManageTasksArgs {
   }
 }
 
+interface UpdateStrategyArgs {
+  sessionId: string
+  currentState: {
+    completedSteps: number
+    remainingSteps: number
+    findings: Array<{
+      type: string
+      severity: string
+      target: string
+    }>
+    testedEndpoints: string[]
+    discoveredEndpoints: string[]
+    blockedPayloads?: string[]
+    technologies?: string[]
+  }
+  currentStrategy?: {
+    focusAreas: string[]
+    skipPatterns: string[]
+    maxDepth: number
+    testIntensity: 'light' | 'normal' | 'thorough'
+  }
+}
+
 type ToolArgs =
   | HttpRequestArgs
   | AnalyzeResponseArgs
   | ExtractLinksArgs
   | TestPayloadArgs
   | ManageTasksArgs
+  | UpdateStrategyArgs
   | Record<string, unknown>
 
 // Tool result types
@@ -150,7 +174,65 @@ export const toolDisplayMap: Record<string, ToolDisplayInfo> = {
 
   updateStrategy: {
     emoji: '🎯',
-    formatCall: () => 'Updated scanning strategy',
+    formatCall: (args) => {
+      if (args && typeof args === 'object' && 'currentState' in args) {
+        const strategyArgs = args as UpdateStrategyArgs
+        const totalSteps =
+          strategyArgs.currentState.completedSteps +
+          strategyArgs.currentState.remainingSteps
+        const progress = (
+          (strategyArgs.currentState.completedSteps / totalSteps) *
+          100
+        ).toFixed(1)
+        const findings = strategyArgs.currentState.findings.length
+        return `Updating strategy (${progress}% complete, ${findings} findings)`
+      }
+      return 'Updating scanning strategy'
+    },
+    formatResult: (result) => {
+      if (result && typeof result === 'object' && 'success' in result) {
+        const strategyResult = result as {
+          success: boolean
+          reasoning?: string
+          adjustments?: string[]
+          tactics?: Array<{ technique: string; priority: string }>
+          hasSignificantChanges?: boolean
+          error?: string
+        }
+
+        if (strategyResult.success) {
+          const parts: string[] = []
+
+          if (strategyResult.reasoning) {
+            parts.push(`Reasoning: ${strategyResult.reasoning}`)
+          }
+
+          if (
+            strategyResult.adjustments &&
+            strategyResult.adjustments.length > 0
+          ) {
+            parts.push(`Adjustments: ${strategyResult.adjustments.join(', ')}`)
+          }
+
+          if (strategyResult.tactics && strategyResult.tactics.length > 0) {
+            const highPriorityTactics = strategyResult.tactics
+              .filter((t) => t.priority === 'high')
+              .map((t) => t.technique)
+            if (highPriorityTactics.length > 0) {
+              parts.push(
+                `High-priority tactics: ${highPriorityTactics.join(', ')}`,
+              )
+            }
+          }
+
+          return parts.join(' | ')
+        }
+        if (strategyResult.error) {
+          return `Failed to update strategy: ${strategyResult.error}`
+        }
+      }
+      return undefined
+    },
   },
 }
 
@@ -158,7 +240,6 @@ export function displayToolCall(
   call: { toolName: string; args: ToolArgs },
   out: typeof output,
   sessionId: string,
-  context?: { strategyUpdates?: number },
 ): void {
   const toolInfo = toolDisplayMap[call.toolName]
 
@@ -176,17 +257,6 @@ export function displayToolCall(
         `Found ${lastFinding.severity} severity ${lastFinding.type} vulnerability at ${lastFinding.url}`,
       )
     }
-    return
-  }
-
-  // Special handling for updateStrategy
-  if (
-    call.toolName === 'updateStrategy' &&
-    context?.strategyUpdates !== undefined
-  ) {
-    out.info(
-      `${toolInfo.emoji} Updated scanning strategy (update #${context.strategyUpdates})`,
-    )
     return
   }
 
