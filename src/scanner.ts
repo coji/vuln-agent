@@ -1,6 +1,8 @@
 import { createVulnAgent } from './agent.js'
+import type { HttpClient, RequestOptions } from './http-client.js'
 import type {
   AnalysisResult,
+  HttpResponse,
   LLMProvider,
   LLMVulnerabilityTester,
   SeverityLevel,
@@ -17,24 +19,6 @@ export interface ScannerOptions {
     provider: LLMProvider
   }
   maxAttempts?: number
-}
-
-export interface HttpClient {
-  request: (options: RequestOptions) => Promise<HttpResponse>
-}
-
-export interface RequestOptions {
-  url: string
-  method?: string
-  headers?: Record<string, string>
-  body?: string
-}
-
-export interface HttpResponse {
-  status: number
-  headers: Record<string, string>
-  body: string
-  url: string
 }
 
 export interface WebVulnerability {

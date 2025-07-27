@@ -1,4 +1,15 @@
-import type { HttpClient, HttpResponse, RequestOptions } from './scanner.js'
+import type { HttpResponse } from './types.js'
+
+export interface HttpClient {
+  request: (options: RequestOptions) => Promise<HttpResponse>
+}
+
+export interface RequestOptions {
+  url: string
+  method?: string
+  headers?: Record<string, string>
+  body?: string
+}
 
 export interface HttpClientConfig {
   rateLimit: {
