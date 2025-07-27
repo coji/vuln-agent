@@ -7,8 +7,6 @@ export const debug = {
   http: createDebug('vuln-agent:http'),
   llm: createDebug('vuln-agent:llm'),
   vulnerability: createDebug('vuln-agent:vulnerability'),
-  xss: createDebug('vuln-agent:xss'),
-  sqli: createDebug('vuln-agent:sqli'),
 }
 
 // Helper function to enable all debug output

@@ -1,6 +1,6 @@
 # 🛡️ VulnAgent - AI-Powered Web Security Scanner
 
-VulnAgent uses AI to find security vulnerabilities in web applications. No rules, no patterns - just intelligent analysis.
+VulnAgent is a **100% LLM-native** security scanner that uses AI to find vulnerabilities in web applications. Unlike traditional scanners that rely on predefined rules and patterns, VulnAgent leverages Large Language Models to intelligently analyze, adapt, and discover security issues.
 
 ## 🚀 Quick Start
 
@@ -101,10 +101,9 @@ Example configuration:
 {
   "defaultLLM": "gemini-2.5-flash",
   "maxSteps": 200,
+  "timeout": 30000,
   "format": "console",
-  "web": {
-    "whitelist": []
-  },
+  "whitelist": [],
   "apiKeys": {
     "google": "your-api-key-here"
   }
@@ -127,11 +126,11 @@ vuln-agent scan [options] <target>
 
 Options:
   -f, --format <format>    Output format (console|json|markdown|html)
-  -l, --llm <provider>     LLM provider (uses default if not specified)
-  -w, --whitelist <hosts>  Allowed hosts (comma-separated)
-  -s, --max-steps <number> Maximum AI agent steps (default: 100)
-  -v, --verbose            Show AI agent actions
-  -d, --debug              Show debug information
+  -l, --llm <provider>     LLM provider (openai-o3|claude-sonnet-4|gemini-2.5-pro|gemini-2.5-flash)
+  -w, --whitelist <hosts>  Allowed hosts for web scanning (comma-separated)
+  -s, --max-steps <number> Maximum number of AI agent steps (default: 100)
+  -v, --verbose            Enable verbose output
+  -d, --debug              Enable debug output
 ```
 
 ### `vuln-agent init`
@@ -150,15 +149,21 @@ Options:
 
 ## 🏗️ How It Works
 
-VulnAgent uses AI to:
+VulnAgent is built on a **completely LLM-native architecture**:
 
-1. **Explore** - Maps your application structure
-2. **Analyze** - Identifies potential vulnerabilities
-3. **Test** - Generates and tests attack payloads
-4. **Verify** - Confirms findings are real vulnerabilities
-5. **Report** - Provides detailed findings with fixes
+1. **Autonomous AI Agent** - Uses up to 100 steps to thoroughly test your application
+2. **Intelligent Exploration** - Maps application structure and discovers attack surfaces
+3. **Adaptive Strategy** - Continuously adjusts testing approach based on findings
+4. **Context-Aware Payloads** - Generates custom attack vectors specific to your application
+5. **Smart Verification** - Confirms real vulnerabilities vs false positives
 
-The AI adapts its strategy based on what it discovers, making it more effective than rule-based scanners.
+### 🎯 Key Features
+
+- **No Rules, No Signatures** - Pure AI-driven vulnerability detection
+- **Self-Adapting** - Changes strategy mid-scan based on discovered patterns
+- **Technology Detection** - Automatically identifies frameworks and adjusts techniques
+- **WAF Evasion** - Learns from blocked payloads to find bypasses
+- **Comprehensive Reporting** - Detailed findings with context-specific remediation
 
 ## 🐛 Debugging
 

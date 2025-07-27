@@ -1,7 +1,7 @@
 {
   "name": "vuln-agent",
   "version": "0.1.0",
-  "description": "LLM-powered vulnerability scanner for your codebase",
+  "description": "AI-Powered Web Security Scanner - uses LLMs to find vulnerabilities without predefined rules",
   "keywords": [
     "security",
     "vulnerability",
@@ -26,6 +26,11 @@
   "bin": {
     "vuln-agent": "./dist/src/cli.js"
   },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "pnpm run build",

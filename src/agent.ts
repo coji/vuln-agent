@@ -112,7 +112,7 @@ export const createVulnAgent = (config: AgentConfig) => {
       output.scanning('Starting vulnerability scan...')
 
       // Main agent execution using Vercel AI SDK's streamText
-      const result = await streamText({
+      const result = streamText({
         model: config.llmProvider.model,
         system: `${AGENT_SYSTEM_PROMPT}
 
