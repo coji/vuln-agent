@@ -12,6 +12,7 @@
 - **包括的なセキュリティテスト**: XSS、SQLインジェクション、認証バイパスなど、一般的なWeb脆弱性を検出
 - **適応的なアプローチ**: アプリケーションのコンテキストに基づいてテスト戦略を動的に調整
 - **詳細なレポート**: 発見された脆弱性について、再現手順と修正方法を含む包括的なレポートを生成
+- **ソースコード分析**: 同じプロジェクト内で実行時は、ソースコードを直接分析してより深い脆弱性検出が可能
 
 ### 使用方法
 
@@ -42,6 +43,13 @@ claude "このWebアプリケーションの脆弱性をスキャンして"
 
 claude "XSSの脆弱性がないか確認して"
 # → 特定の脆弱性タイプに焦点を当てた分析
+
+# ローカルプロジェクトの分析
+claude "このプロジェクトのセキュリティ脆弱性をチェックして"
+# → ソースコードも含めた包括的な分析
+
+claude "src/api/auth.jsの認証ロジックに問題がないか確認"
+# → 特定のファイルのセキュリティレビュー
 ```
 
 #### 3. プロアクティブ実行
@@ -75,6 +83,18 @@ vuln-scannerは以下の形式で脆弱性を報告します:
 
 ### Remediation
 [具体的な修正方法]
+
+### Source Code Reference (ローカルプロジェクトの場合)
+**File**: src/api/users.js:45
+**Vulnerable Code**: 
+```javascript
+const query = `SELECT * FROM users WHERE id = ${req.params.id}`;
+```
+**Fixed Code**:
+```javascript
+const query = 'SELECT * FROM users WHERE id = ?';
+db.query(query, [req.params.id]);
+```
 ```
 
 ### 注意事項
