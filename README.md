@@ -224,6 +224,38 @@ node dist/src/cli.js scan https://example.com
 
 Only scan websites you own or have permission to test. VulnAgent is a powerful tool that should be used responsibly.
 
+## 🤖 Claude Code Subagent
+
+VulnAgent is also available as a Claude Code subagent! This allows you to use VulnAgent's powerful security scanning capabilities directly within Claude Code.
+
+### Quick Setup
+
+```bash
+# Copy the subagent to your project
+cp .claude/agents/vuln-scanner.md /path/to/your/project/.claude/agents/
+
+# Or install globally for all projects
+mkdir -p ~/.claude/agents
+cp .claude/agents/vuln-scanner.md ~/.claude/agents/
+```
+
+### Usage in Claude Code
+
+```bash
+# Scan external websites
+claude "Check security vulnerabilities on https://example.com"
+
+# Analyze local project code
+claude "Review this project for security issues"
+
+# Check specific files
+claude "Is there any SQL injection vulnerability in src/api/users.js?"
+```
+
+The subagent will automatically activate when you mention security testing, vulnerability scanning, or penetration testing. It combines both black-box testing (for URLs) and white-box analysis (for local code).
+
+See [.claude/agents/README.md](.claude/agents/README.md) for detailed documentation.
+
 ## 🤝 Contributing
 
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
